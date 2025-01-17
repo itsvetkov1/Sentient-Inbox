@@ -1,0 +1,18 @@
+{
+  "responses": [
+    {
+      "email_id": "2025-01-13_09:00_aiagentkris@gmail.com",
+      "response_time": "2025-01-12T15:38:21.272671",
+      "response_data": {
+        "sender": {
+          "email": "aiagentkris@gmail.com",
+          "name": "John"
+        },
+        "subject": "New AI Model Launch",
+        "date": "2025-01-13",
+        "time": "09:00",
+        "response": "hey john,\n\nthat time works perfectly! see you on january 13th at 9 am in the big meeting room.\n\ncheers!"
+      }
+    }
+  ]
+}

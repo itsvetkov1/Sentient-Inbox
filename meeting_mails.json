@@ -1,0 +1,126 @@
+{
+  "last_updated": "2025-01-12T15:38:19.873614",
+  "meetings": [
+    {
+      "added_on": "2025-01-12T14:50:43.546200",
+      "date": "2025-01-13",
+      "location": "Big Meeting Room",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "John"
+      },
+      "time": "09:00",
+      "topic": "New AI Model Launch"
+    },
+    {
+      "added_on": "2025-01-12T14:54:53.974214",
+      "date": "2025-01-12",
+      "location": "Small meeting room",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "John"
+      },
+      "time": "15:02",
+      "topic": "Emergency meeting about GPT-5"
+    },
+    {
+      "added_on": "2025-01-12T15:32:07.681258",
+      "date": "2025-01-13",
+      "location": "Oslo",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "Claude"
+      },
+      "time": "17:00",
+      "topic": "Meeting in Oslo"
+    },
+    {
+      "added_on": "2025-01-12T15:32:07.681258",
+      "date": "2025-01-12",
+      "location": "Small meeting room",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "John"
+      },
+      "time": "14:52",
+      "topic": "Emergency meeting about GPT-5 release"
+    },
+    {
+      "added_on": "2025-01-12T15:32:07.681258",
+      "date": "2025-01-13",
+      "location": "Big Meeting Room",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "John"
+      },
+      "time": "09:00",
+      "topic": "Discussion about new AI Model launch"
+    },
+    {
+      "added_on": "2025-01-12T15:35:07.641495",
+      "date": "2025-01-12",
+      "location": "Small meeting room",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "Claude"
+      },
+      "time": "15:02",
+      "topic": "Emergency meeting about OpenAI's GPT5 release"
+    },
+    {
+      "added_on": "2025-01-12T15:35:07.641495",
+      "date": "2025-01-13",
+      "location": "Big Meeting Room",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "Claude"
+      },
+      "time": "09:00",
+      "topic": "Launching new AI Model"
+    },
+    {
+      "added_on": "2025-01-12T15:35:53.122979",
+      "date": "2025-01-12",
+      "location": "small meeting room",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "John"
+      },
+      "time": "14:52",
+      "topic": "Emergency meeting"
+    },
+    {
+      "added_on": "2025-01-12T15:36:43.113807",
+      "date": "2025-01-12",
+      "location": "small meeting room",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "John"
+      },
+      "time": "14:52",
+      "topic": "emergency meeting about OpenAI GPT5"
+    },
+    {
+      "added_on": "2025-01-12T15:36:43.113807",
+      "date": "2025-01-13",
+      "location": "Big Meeting Room",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "John"
+      },
+      "time": "09:00",
+      "topic": "meeting about new AI Model launch"
+    },
+    {
+      "added_on": "2025-01-12T15:38:19.873614",
+      "date": "2025-01-13",
+      "location": "Oslo",
+      "sender": {
+        "email": "aiagentkris@gmail.com",
+        "name": "Q"
+      },
+      "time": "17:00",
+      "topic": "Important meeting in Oslo"
+    }
+  ]
+}
