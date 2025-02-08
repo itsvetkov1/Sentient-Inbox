@@ -1,17 +1,17 @@
 {
   "responses": [
     {
-      "email_id": "2025-01-13_09:00_aiagentkris@gmail.com",
-      "response_time": "2025-01-12T15:38:21.272671",
+      "email_id": "2025-02-09_09:00_i.b.cvetkov@gmail.com",
+      "response_time": "2025-02-08T22:12:50.516586",
       "response_data": {
         "sender": {
-          "email": "aiagentkris@gmail.com",
-          "name": "John"
+          "email": "i.b.cvetkov@gmail.com",
+          "name": "Ivailo Tsvetkov"
         },
-        "subject": "New AI Model Launch",
-        "date": "2025-01-13",
+        "subject": "Discuss the project",
+        "date": "2025-02-09",
         "time": "09:00",
-        "response": "hey john,\n\nthat time works perfectly! see you on january 13th at 9 am in the big meeting room.\n\ncheers!"
+        "response": "Dear Ivailo Tsvetkov,\n\nThank you for your meeting request. I am pleased to confirm our meeting on 2025-02-09 at 09:00 at hogwarts.\n\nBest regards,\nIvaylo's AI Assistant"
       }
     }
   ]
