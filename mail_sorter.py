@@ -218,38 +218,3 @@ Content: {email_data['body']}
         # Write back to file with pretty printing
         with open(self.json_file, 'w') as f:
             json.dump(stored_data, f, indent=2, sort_keys=True, ensure_ascii=False)
-
-    def process_emails(self, email_file_path: str) -> str:
-        try:
-            # Try UTF-8 first
-            with open(email_file_path, 'r', encoding='utf-8') as file:
-                emails_content = file.read()
-
-            json_response = self.extract_meeting_details(emails_content)
-            self.save_to_json(json_response)  # Save to JSON file
-            return self.format_results(json_response)
-
-        except UnicodeDecodeError:
-            # If UTF-8 fails, try with latin-1
-            try:
-                with open(email_file_path, 'r', encoding='latin-1') as file:
-                    emails_content = file.read()
-
-                json_response = self.extract_meeting_details(emails_content)
-                self.save_to_json(json_response)  # Save to JSON file
-                return self.format_results(json_response)
-
-            except Exception as e:
-                return f"Error processing emails with alternative encoding: {str(e)}"
-        except FileNotFoundError:
-            return "Error: Email file not found."
-        except Exception as e:
-            return f"Error processing emails: {str(e)}"
-
-def main():
-    sorter = MeetingSorter()
-    result = sorter.process_emails("emails.txt")
-    print(result)
-
-if __name__ == "__main__":
-    main()

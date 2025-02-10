@@ -162,6 +162,11 @@ Ivaylo's AI Assistant"""
             proposed_date,
             proposed_time
         )
+        if not subject or subject.strip() == "":
+            subject = "Meeting Request"
+
+        subject_prefix = "Re: " if not subject.startswith("Re:") else ""
+        full_subject = f"{subject_prefix}{subject}"
 
         # Send the response
         subject_prefix = "Re: " if not subject.startswith("Re:") else ""

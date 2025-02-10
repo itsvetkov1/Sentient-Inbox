@@ -7,12 +7,27 @@ import os.path
 # Define the scopes your app needs
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.modify']
 
+
+def mark_as_read(service, user_id, message_id):
+    """Mark a message as read by removing the UNREAD label."""
+    try:
+        service.users().messages().modify(
+            userId=user_id,
+            id=message_id,
+            body={'removeLabelIds': ['UNREAD']}
+        ).execute()
+        return True
+    except Exception as e:
+        print(f"Error marking message {message_id} as read: {e}")
+        return False
+
+
 def main():
     creds = None
     # Token storage
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    
+
     # If no valid credentials are available, prompt the user to log in
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -21,7 +36,7 @@ def main():
             flow = InstalledAppFlow.from_client_secrets_file(
                 'client_secret.json', SCOPES)
             creds = flow.run_local_server(port=0)
-        
+
         # Save the credentials for the next run
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
@@ -29,31 +44,32 @@ def main():
     # Build the Gmail service
     service = build('gmail', 'v1', credentials=creds)
 
-    # Get the starred emails
+    # Get unread emails
     results = service.users().messages().list(
         userId='me',
-        labelIds=['STARRED']
+        labelIds=['UNREAD'],
+        maxResults=50  # Add a limit to prevent processing too many emails at once
     ).execute()
-    
+
     messages = results.get('messages', [])
     count = len(messages)
 
     with open('emails.txt', 'w', encoding='utf-8') as f:
-        f.write(f'Number of starred emails: {count}\n\n')
-        
-        # Get and write details of all starred emails
+        f.write(f'Number of unread emails: {count}\n\n')
+
+        # Get and write details of all unread emails
         for message in messages:
             msg = service.users().messages().get(
                 userId='me',
                 id=message['id'],
                 format='full'
             ).execute()
-            
+
             headers = msg['payload']['headers']
             subject = next((h['value'] for h in headers if h['name'] == 'Subject'), 'No Subject')
             sender = next((h['value'] for h in headers if h['name'] == 'From'), 'No Sender')
             date = next((h['value'] for h in headers if h['name'] == 'Date'), 'No Date')
-            
+
             # Get email body
             if 'parts' in msg['payload']:
                 parts = msg['payload']['parts']
@@ -77,12 +93,16 @@ def main():
                 body = base64.urlsafe_b64decode(body).decode('utf-8')
             else:
                 body = 'No body content available'
-            
+
             f.write(f'From: {sender}\n')
             f.write(f'Subject: {subject}\n')
             f.write(f'Date: {date}\n')
             f.write(f'Body:\n{body}\n')
-            f.write('-' * 50 + '\n\n')  # Add separator between emails
+            f.write('-' * 50 + '\n\n')
+
+            # Mark the email as read after processing
+            mark_as_read(service, 'me', message['id'])
+
 
 if __name__ == '__main__':
     main()
