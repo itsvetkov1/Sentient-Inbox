@@ -1,0 +1,127 @@
+{
+  "requests": [
+    {
+      "timestamp": "2025-02-11T21:48:46.946978",
+      "duration": 0.433799,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-11T21:50:23.286084",
+      "duration": 0.678611,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-11T21:51:51.959408",
+      "duration": 0.630253,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-11T22:08:34.241258",
+      "duration": 0.746595,
+      "status": "success"
+    }
+  ],
+  "errors": [
+    {
+      "timestamp": "2025-02-11T21:16:02.055078",
+      "error": "Error code: 400 - {'error': {'message': '`reasoning_format` is not supported with this model', 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:16:04.430718",
+      "error": "Error code: 400 - {'error': {'message': '`reasoning_format` is not supported with this model', 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:16:08.554009",
+      "error": "Error code: 400 - {'error': {'message': '`reasoning_format` is not supported with this model', 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:20:58.435377",
+      "error": "Error code: 400 - {'error': {'message': '`service_tier` `auto` is not available for this org', 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:21:00.661207",
+      "error": "Error code: 400 - {'error': {'message': '`service_tier` `auto` is not available for this org', 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:21:04.866126",
+      "error": "Error code: 400 - {'error': {'message': '`service_tier` `auto` is not available for this org', 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:26:32.123790",
+      "error": "Error code: 400 - {'error': {'message': '`service_tier` `auto` is not available for this org', 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:26:34.362849",
+      "error": "Error code: 400 - {'error': {'message': '`service_tier` `auto` is not available for this org', 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:26:38.498314",
+      "error": "Error code: 400 - {'error': {'message': '`service_tier` `auto` is not available for this org', 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:31:09.541044",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:31:11.791869",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:31:16.089711",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:34:54.660789",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:34:56.881738",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:35:01.221279",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:36:08.349117",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:36:10.600833",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:36:14.798691",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:39:53.887140",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:39:56.023652",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:40:00.761575",
+      "error": "Error code: 400 - {'error': {'message': \"'service_tier' : value is not one of the allowed values ['auto','on_demand','flex',null]\", 'type': 'invalid_request_error'}}"
+    },
+    {
+      "timestamp": "2025-02-11T21:42:18.064685",
+      "error": "object ChatCompletion can't be used in 'await' expression"
+    },
+    {
+      "timestamp": "2025-02-11T21:42:20.339848",
+      "error": "object ChatCompletion can't be used in 'await' expression"
+    },
+    {
+      "timestamp": "2025-02-11T21:42:24.612346",
+      "error": "object ChatCompletion can't be used in 'await' expression"
+    }
+  ],
+  "performance": {
+    "avg_response_time": 0.6223145,
+    "total_requests": 4,
+    "success_rate": -500.0
+  }
+}

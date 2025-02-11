@@ -1,17 +1,17 @@
 {
   "responses": [
     {
-      "email_id": "2025-02-09_09:00_i.b.cvetkov@gmail.com",
-      "response_time": "2025-02-08T22:12:50.516586",
+      "email_id": "2025-02-12_15:00_i.b.cvetkov@gmail.com",
+      "response_time": "2025-02-11T22:08:35.980798",
       "response_data": {
         "sender": {
           "email": "i.b.cvetkov@gmail.com",
           "name": "Ivailo Tsvetkov"
         },
-        "subject": "Discuss the project",
-        "date": "2025-02-09",
-        "time": "09:00",
-        "response": "Dear Ivailo Tsvetkov,\n\nThank you for your meeting request. I am pleased to confirm our meeting on 2025-02-09 at 09:00 at hogwarts.\n\nBest regards,\nIvaylo's AI Assistant"
+        "subject": "Meeting 3",
+        "date": "2025-02-12",
+        "time": "15:00",
+        "response": "Dear Ivailo Tsvetkov,\n\nThank you for your meeting request. To help me properly schedule our meeting, could you please specify the meeting agenda/purpose?\n\nBest regards,\nIvaylo's AI Assistant"
       }
     }
   ]

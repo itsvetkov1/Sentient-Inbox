@@ -1,0 +1,16 @@
+{
+  "last_updated": "2025-02-11T22:08:34.243225",
+  "meetings": [
+    {
+      "added_on": "2025-02-11T21:51:51.959408",
+      "date": "2025-02-12",
+      "location": "the church",
+      "sender": {
+        "email": "i.b.cvetkov@gmail.com",
+        "name": "Ivailo Tsvetkov"
+      },
+      "time": "15:00",
+      "topic": "Meeting 3"
+    }
+  ]
+}

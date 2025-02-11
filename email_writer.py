@@ -231,7 +231,7 @@ Ivaylo's AI Assistant"""
             print(f"Error sending email: {e}")
             return False
 
-    def process_meeting_request(self, email_id, email_content, sender_info, subject, proposed_date, proposed_time):
+    async def process_meeting_request(self, email_id, email_content, sender_info, subject, proposed_date, proposed_time):
         """Process a meeting request and send an appropriate response"""
         try:
             # Check if we've already responded to this email

@@ -1,16 +1,4 @@
 {
-  "last_updated": "2025-02-08T22:12:49.599619",
-  "meetings": [
-    {
-      "added_on": "2025-02-08T21:55:00.678124",
-      "date": "2025-02-09",
-      "location": "Hogwarts",
-      "sender": {
-        "email": "i.b.cvetkov@gmail.com",
-        "name": "Ivailo Tsvetkov"
-      },
-      "time": "09:00",
-      "topic": "Discuss the project"
-    }
-  ]
+  "last_updated": "2025-02-11T22:08:35.980798",
+  "meetings": []
 }
