@@ -1,5 +1,5 @@
 {
-  "last_updated": "2025-02-11T22:08:34.243225",
+  "last_updated": "2025-02-15T11:38:17.742623",
   "meetings": [
     {
       "added_on": "2025-02-11T21:51:51.959408",
@@ -11,6 +11,50 @@
       },
       "time": "15:00",
       "topic": "Meeting 3"
+    },
+    {
+      "added_on": "2025-02-13T17:13:11.807881",
+      "date": "2025-02-11",
+      "location": null,
+      "sender": {
+        "email": "i.b.cvetkov@gmail.com",
+        "name": "Ivailo Tsvetkov"
+      },
+      "time": "17:00",
+      "topic": null
+    },
+    {
+      "added_on": "2025-02-13T17:13:11.807881",
+      "date": "2025-02-14",
+      "location": null,
+      "sender": {
+        "email": "i.b.cvetkov@gmail.com",
+        "name": "Ivailo Tsvetkov"
+      },
+      "time": "15:00",
+      "topic": null
+    },
+    {
+      "added_on": "2025-02-15T11:22:37.675783",
+      "date": "2025-02-18",
+      "location": null,
+      "sender": {
+        "email": "i.b.cvetkov@gmail.com",
+        "name": "Ivailo Tsvetkov"
+      },
+      "time": "14:00",
+      "topic": "future sprint"
+    },
+    {
+      "added_on": "2025-02-15T11:34:33.186645",
+      "date": "2025-02-16",
+      "location": null,
+      "sender": {
+        "email": "i.b.cvetkov@gmail.com",
+        "name": "Ivailo Tsvetkov"
+      },
+      "time": null,
+      "topic": "finish the deal"
     }
   ]
 }
