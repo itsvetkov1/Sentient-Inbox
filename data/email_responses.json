@@ -1,3 +1,40 @@
 {
-  "responses": []
+  "responses": [
+    {
+      "email_id": "1950b39aeb161ffb",
+      "response_time": "2025-02-15T22:24:13.605230",
+      "response_data": {
+        "sender": "Ivailo Tsvetkov <i.b.cvetkov@gmail.com>",
+        "subject": "Meeting at 5",
+        "response": "Dear Ivailo Tsvetkov,\n\nThank you for your meeting request. To help me properly schedule our meeting, could you please specify the meeting agenda/purpose?\n\nBest regards,\nIvaylo's AI Assistant"
+      }
+    },
+    {
+      "email_id": "1950b3967e25222b",
+      "response_time": "2025-02-15T22:24:14.601839",
+      "response_data": {
+        "sender": "Ivailo Tsvetkov <i.b.cvetkov@gmail.com>",
+        "subject": "Meeting at 5",
+        "response": "Dear Ivailo Tsvetkov,\n\nThank you for your meeting request. To help me properly schedule our meeting, could you please specify the meeting location and the meeting agenda/purpose?\n\nBest regards,\nIvaylo's AI Assistant"
+      }
+    },
+    {
+      "email_id": "195090af2dfa1759",
+      "response_time": "2025-02-15T22:24:16.222948",
+      "response_data": {
+        "sender": "Ivailo Tsvetkov <i.b.cvetkov@gmail.com>",
+        "subject": "Sprint planning",
+        "response": "Dear Ivailo Tsvetkov,\n\nThank you for your meeting request. To help me properly schedule our meeting, could you please specify the meeting agenda/purpose?\n\nBest regards,\nIvaylo's AI Assistant"
+      }
+    },
+    {
+      "email_id": "19509046f0fe589e",
+      "response_time": "2025-02-15T22:24:19.742014",
+      "response_data": {
+        "sender": "Ivailo Tsvetkov <i.b.cvetkov@gmail.com>",
+        "subject": "Blazing",
+        "response": "Dear Ivailo Tsvetkov,\n\nThank you for your meeting request. To help me properly schedule our meeting, could you please specify the meeting agenda/purpose?\n\nBest regards,\nIvaylo's AI Assistant"
+      }
+    }
+  ]
 }

@@ -52,7 +52,7 @@ class EmailProcessor:
             logger.error(f"Error updating email status: {e}")
             return False
             
-    def process_unread_emails(self) -> Tuple[int, int, List[str]]:
+    async def process_unread_emails(self) -> Tuple[int, int, List[str]]:
         """
         Process all unread emails.
         
@@ -132,7 +132,7 @@ class EmailProcessor:
                     email["thread_messages"] = thread_messages
                     
                     # Process the email if not already handled
-                    should_mark_read, error = self.router.process_email(
+                    should_mark_read, error = await self.router.process_email(
                         message_id=message_id,
                         subject=email.get("subject", ""),
                         sender=email.get("sender", ""),

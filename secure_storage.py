@@ -84,7 +84,7 @@ class SecureStorageManager:
             if self.keys_file.exists():
                 with open(self.keys_file, 'rb') as f:
                     keys_data = json.load(f)
-                    return [base64.urlsafe_b64decode(k) for k in keys_data['keys']]
+                    return [k.encode() for k in keys_data['keys']]
             
             # Generate initial key
             initial_key = base64.urlsafe_b64encode(os.urandom(32))

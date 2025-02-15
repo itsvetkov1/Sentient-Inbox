@@ -46,7 +46,7 @@ async def process_new_emails() -> bool:
         
         # Process unread emails
         log_execution("Processing unread emails...")
-        processed_count, error_count, errors = email_processor.process_unread_emails()
+        processed_count, error_count, errors = await email_processor.process_unread_emails()
         
         # Log processing summary
         log_execution(f"Email processing cycle completed. "

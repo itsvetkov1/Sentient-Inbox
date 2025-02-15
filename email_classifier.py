@@ -1,8 +1,13 @@
 from typing import Dict, List, Optional, Tuple
 from enum import Enum
 import logging
+import json
+import time
 from dataclasses import dataclass
 from datetime import datetime
+import asyncio
+from groq_integration.model_manager import ModelManager
+from groq_integration.client_wrapper import EnhancedGroqClient
 
 logger = logging.getLogger(__name__)
 
@@ -29,77 +34,24 @@ class EmailClassifier:
     """Classifies emails by topic and determines if they require a response."""
     
     def __init__(self):
-        # Keywords and patterns for each topic
+        self.model_manager = ModelManager()
+        self.groq_client = EnhancedGroqClient()
+        
+        # Fallback patterns for when LLM is unavailable
         self.topic_patterns: Dict[EmailTopic, List[str]] = {
             EmailTopic.MEETING: [
-                "schedule meeting",
-                "meeting request",
-                "let's meet",
-                "meet with",
-                "meeting invitation",
-                "calendar invite",
-                "schedule time",
-                "schedule a call",
-                "set up a meeting",
-                "arrange a meeting",
-                "meeting schedule",
-                "meeting availability",
-                "when are you free",
-                "your availability",
-                "discuss",
-                "sync",
-                "catch up",
-                "catch-up",
-                "chat",
-                "call",
-                "meeting",
-                "meet",
-                "zoom",
-                "teams",
-                "google meet",
-                "conference",
-                "appointment",
-                "schedule",
-                "booking",
-                "available",
-                "availability",
-                "time slot",
-                "timeslot",
-                "time to",
-                "time for",
-            ],
-            # Add patterns for new topics as more agents are introduced
+                "schedule meeting", "meeting request", "let's meet",
+                "calendar invite", "schedule time", "schedule a call",
+                "meeting availability", "when are you free",
+                "zoom", "teams", "google meet"
+            ]
         }
         
-        # Patterns indicating a response is required
         self.response_required_patterns = [
-            "please respond",
-            "let me know",
-            "confirm",
-            "rsvp",
-            "your thoughts",
-            "what do you think",
-            "get back to me",
-            "respond by",
-            "need your input",
-            "your feedback",
-            "your response",
-            "please reply",
-            "awaiting your response",
-            "available",
-            "availability",
-            "can you",
-            "would you",
-            "are you",
-            "do you",
-            "when",
-            "where",
-            "how about",
-            "let's",
-            "shall we",
-            "want to",
-            "would like to",
-            "?",  # Questions usually require responses
+            "please respond", "let me know", "confirm", "rsvp",
+            "your thoughts", "what do you think", "get back to me",
+            "need your input", "your feedback", "please reply",
+            "can you", "would you", "?"
         ]
 
     def _normalize_text(self, text: Optional[str]) -> str:
@@ -113,33 +65,101 @@ class EmailClassifier:
         normalized_text = self._normalize_text(text)
         return any(pattern in normalized_text for pattern in patterns)
 
-    def _determine_topic(self, subject: str, content: str) -> EmailTopic:
-        """Determine the topic of an email based on its subject and content."""
+    async def _determine_topic_llm(self, subject: str, content: str) -> EmailTopic:
+        """Use LLM to determine email topic."""
+        try:
+            model_config = self.model_manager.get_model_config('email_classification')
+            logger.info(f"Using model {model_config['name']} for topic classification")
+            
+            prompt = [
+                {"role": "system", "content": "You are an email classifier. Analyze the email and determine if it's about scheduling a meeting. Respond with ONLY 'meeting' or 'unknown'."},
+                {"role": "user", "content": f"Subject: {subject}\n\nContent: {content}"}
+            ]
+            logger.info(f"Sending prompt to model: {json.dumps(prompt, indent=2)}")
+            
+            start_time = time.time()
+            response = await self.groq_client.process_with_retry(
+                messages=prompt,
+                model=model_config['name'],
+                temperature=0.1,
+                max_completion_tokens=10
+            )
+            duration = time.time() - start_time
+            
+            result = response.choices[0].message.content.strip().lower()
+            logger.info(f"Model response received in {duration:.2f}s: {result}")
+            
+            return EmailTopic.MEETING if result == 'meeting' else EmailTopic.UNKNOWN
+            
+        except Exception as e:
+            logger.error(f"LLM classification failed: {e}, falling back to pattern matching")
+            return self._determine_topic_patterns(subject, content)
+    
+    def _determine_topic_patterns(self, subject: str, content: str) -> EmailTopic:
+        """Fallback pattern-based topic determination."""
+        logger.info("Falling back to pattern matching for topic determination")
         normalized_subject = self._normalize_text(subject)
         normalized_content = self._normalize_text(content)
         
-        # Check each topic's patterns
+        logger.info(f"Checking patterns for subject: {normalized_subject}")
+        logger.info(f"Checking patterns for content: {normalized_content[:100]}...")
+        
         for topic, patterns in self.topic_patterns.items():
-            # Check subject first as it's more reliable
             if self._contains_pattern(normalized_subject, patterns):
+                logger.info(f"Found matching pattern in subject for topic: {topic.value}")
                 return topic
-            # Check content if subject didn't match
             if self._contains_pattern(normalized_content, patterns):
+                logger.info(f"Found matching pattern in content for topic: {topic.value}")
                 return topic
         
+        logger.info("No matching patterns found, returning UNKNOWN topic")
         return EmailTopic.UNKNOWN
 
-    def _requires_response(self, subject: str, content: str) -> bool:
-        """Determine if an email requires a response."""
+    async def _requires_response_llm(self, subject: str, content: str) -> bool:
+        """Use LLM to determine if email requires response."""
+        try:
+            model_config = self.model_manager.get_model_config('email_classification')
+            logger.info(f"Using model {model_config['name']} for response requirement check")
+            
+            prompt = [
+                {"role": "system", "content": "You are an email analyzer. Determine if this email requires a response. Respond with ONLY 'yes' or 'no'."},
+                {"role": "user", "content": f"Subject: {subject}\n\nContent: {content}"}
+            ]
+            logger.info(f"Sending prompt to model: {json.dumps(prompt, indent=2)}")
+            
+            start_time = time.time()
+            response = await self.groq_client.process_with_retry(
+                messages=prompt,
+                model=model_config['name'],
+                temperature=0.1,
+                max_completion_tokens=10
+            )
+            duration = time.time() - start_time
+            
+            result = response.choices[0].message.content.strip().lower()
+            logger.info(f"Model response received in {duration:.2f}s: {result}")
+            
+            return result == 'yes'
+            
+        except Exception as e:
+            logger.error(f"LLM response check failed: {e}, falling back to pattern matching")
+            return self._requires_response_patterns(subject, content)
+    
+    def _requires_response_patterns(self, subject: str, content: str) -> bool:
+        """Fallback pattern-based response check."""
+        logger.info("Falling back to pattern matching for response requirement check")
         normalized_text = f"{self._normalize_text(subject)} {self._normalize_text(content)}"
-        return self._contains_pattern(normalized_text, self.response_required_patterns)
+        logger.info(f"Checking response patterns in combined text: {normalized_text[:100]}...")
+        result = self._contains_pattern(normalized_text, self.response_required_patterns)
+        logger.info(f"Response requirement determination: {result}")
+        return result
 
-    def classify_email(self, 
-                      message_id: str,
-                      subject: str,
-                      sender: str,
-                      content: str,
-                      received_at: datetime) -> EmailMetadata:
+    async def classify_email(self, 
+                           message_id: str,
+                           subject: str,
+                           sender: str,
+                           content: str,
+                           received_at: datetime) -> EmailMetadata:
         """
         Classify an email and determine if it requires a response.
         
@@ -154,8 +174,13 @@ class EmailClassifier:
             EmailMetadata containing classification results
         """
         try:
-            topic = self._determine_topic(subject, content)
-            requires_response = self._requires_response(subject, content)
+            logger.info(f"Starting classification for email {message_id}")
+            logger.info(f"Email details - Subject: {subject}, Sender: {sender}")
+            
+            start_time = time.time()
+            
+            topic = await self._determine_topic_llm(subject, content)
+            requires_response = await self._requires_response_llm(subject, content)
             
             metadata = EmailMetadata(
                 message_id=message_id,
@@ -167,7 +192,10 @@ class EmailClassifier:
                 raw_content=content
             )
             
-            logger.info(f"Classified email {message_id}: topic={topic.value}, requires_response={requires_response}")
+            duration = time.time() - start_time
+            logger.info(f"Classification completed in {duration:.2f}s")
+            logger.info(f"Classification result - Topic: {topic.value}, Requires Response: {requires_response}")
+            
             return metadata
             
         except Exception as e:
@@ -195,12 +223,12 @@ class EmailRouter:
         self.agents[topic] = agent
         logger.info(f"Registered agent for topic: {topic.value}")
         
-    def process_email(self,
-                     message_id: str,
-                     subject: str,
-                     sender: str,
-                     content: str,
-                     received_at: datetime) -> Tuple[bool, Optional[str]]:
+    async def process_email(self,
+                          message_id: str,
+                          subject: str,
+                          sender: str,
+                          content: str,
+                          received_at: datetime) -> Tuple[bool, Optional[str]]:
         """
         Process an email by classifying it and routing to appropriate agent.
         
@@ -215,8 +243,11 @@ class EmailRouter:
             Tuple of (should_mark_read: bool, error_message: Optional[str])
         """
         try:
+            logger.info(f"Starting email processing for {message_id}")
+            start_time = time.time()
+            
             # Classify the email
-            metadata = self.classifier.classify_email(
+            metadata = await self.classifier.classify_email(
                 message_id=message_id,
                 subject=subject,
                 sender=sender,
@@ -238,7 +269,8 @@ class EmailRouter:
             # Process with agent
             try:
                 agent.process_email(metadata)
-                logger.info(f"Successfully processed email {message_id} with {metadata.topic.value} agent")
+                duration = time.time() - start_time
+                logger.info(f"Successfully processed email {message_id} with {metadata.topic.value} agent in {duration:.2f}s")
                 return True, None
             except Exception as e:
                 error_msg = f"Agent error processing email {message_id}: {e}"

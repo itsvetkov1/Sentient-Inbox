@@ -3,13 +3,13 @@
 MODEL_CONFIGURATIONS = {
     'complex': {
         'primary': {
-            'name': 'deepseek-r1-distill-llama-70b',
+            'name': 'llama-3.3-70b-versatile',
             'default_temperature': 0.7,
             'max_tokens': 4096,
             'recommended_tasks': ['meeting_analysis', 'complex_response_generation']
         },
         'fallback': {
-            'name': 'llama-3.3-70b-versatile',
+            'name': 'llama-3.1-8b-instant',
             'default_temperature': 0.6,
             'max_tokens': 4096,
             'recommended_tasks': ['meeting_analysis', 'response_generation']

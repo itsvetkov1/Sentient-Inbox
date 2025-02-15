@@ -1,6 +1,6 @@
 # groq_integration/__init__.py
 
-from .client_wrapper import GroqClientWrapper
+from .client_wrapper import EnhancedGroqClient
 from .model_manager import ModelManager
 
-__all__ = ['GroqClientWrapper', 'ModelManager']
+__all__ = ['EnhancedGroqClient', 'ModelManager']
