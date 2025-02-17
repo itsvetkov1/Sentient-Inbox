@@ -209,12 +209,432 @@
       "timestamp": "2025-02-15T22:24:21.157401",
       "duration": 0.551972,
       "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:08:14.516028",
+      "duration": 0.961139,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:08:14.974502",
+      "duration": 0.454474,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:08:16.093907",
+      "duration": 0.532769,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:08:16.607866",
+      "duration": 0.49896,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:08:17.581632",
+      "duration": 0.501111,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:08:20.519155",
+      "duration": 2.924412,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:08:22.147493",
+      "duration": 1.620333,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:08:23.672729",
+      "duration": 1.525236,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:11:16.828017",
+      "duration": 0.924624,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:11:17.208831",
+      "duration": 0.374833,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:11:17.902300",
+      "duration": 0.441,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:11:18.336831",
+      "duration": 0.42753,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:11:18.987517",
+      "duration": 0.425688,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:11:19.435362",
+      "duration": 0.443844,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:29.515097",
+      "duration": 0.383189,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:29.876097",
+      "duration": 0.354999,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:30.302570",
+      "duration": 0.187,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:30.498571",
+      "duration": 0.191002,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:31.175602",
+      "duration": 0.40503,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:31.382732",
+      "duration": 0.200129,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:31.875210",
+      "duration": 0.268217,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:32.083208",
+      "duration": 0.199999,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:32.595568",
+      "duration": 0.224637,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:13:32.863499",
+      "duration": 0.25993,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:28:40.160033",
+      "duration": 0.595965,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:28:40.389003",
+      "duration": 0.22375,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:28:40.770196",
+      "duration": 0.138668,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:28:40.916857",
+      "duration": 0.141662,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:28:41.296105",
+      "duration": 0.144235,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:28:41.441848",
+      "duration": 0.140235,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:28:41.920469",
+      "duration": 0.139216,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:28:42.064868",
+      "duration": 0.139331,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:34:07.833470",
+      "duration": 0.572604,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:34:07.841810",
+      "duration": 0.57207,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:34:08.277682",
+      "duration": 0.14851,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:34:08.311254",
+      "duration": 0.190842,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:34:08.689177",
+      "duration": 0.137521,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:34:08.741279",
+      "duration": 0.189623,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:34:09.158650",
+      "duration": 0.185739,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-16T22:34:09.194948",
+      "duration": 0.222037,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:36:10.852203",
+      "duration": 0.536985,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:36:10.873791",
+      "duration": 0.551574,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:36:21.980416",
+      "duration": 0.251657,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:36:22.700780",
+      "duration": 0.966504,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:49.293245",
+      "duration": 0.251239,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:49.527869",
+      "duration": 0.491865,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:49.685869",
+      "duration": 0.156005,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:49.735508",
+      "duration": 0.205644,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:50.334352",
+      "duration": 0.142306,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:50.634265",
+      "duration": 0.444221,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:50.854608",
+      "duration": 0.218343,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:50.864073",
+      "duration": 0.227808,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:51.573324",
+      "duration": 0.236489,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:51.575321",
+      "duration": 0.236488,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:52.120903",
+      "duration": 0.193832,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:52.360858",
+      "duration": 0.435964,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:52.839801",
+      "duration": 0.130838,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:52.968964",
+      "duration": 0.258001,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:53.798129",
+      "duration": 0.126322,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:37:53.925812",
+      "duration": 0.252003,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:32.069918",
+      "duration": 0.34525,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:32.224693",
+      "duration": 0.506024,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:32.411824",
+      "duration": 0.184827,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:32.419084",
+      "duration": 0.192087,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:33.130510",
+      "duration": 0.23262,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:33.152538",
+      "duration": 0.251647,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:33.315720",
+      "duration": 0.161148,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:33.370963",
+      "duration": 0.216391,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:33.933435",
+      "duration": 0.174704,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:33.998438",
+      "duration": 0.241709,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:34.578739",
+      "duration": 0.162002,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:34.696563",
+      "duration": 0.277567,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:35.274683",
+      "duration": 0.200872,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:35.278950",
+      "duration": 0.203141,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:36.185260",
+      "duration": 0.153432,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T14:40:36.267260",
+      "duration": 0.23743,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T15:01:08.614758",
+      "duration": 0.409424,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T15:01:08.653802",
+      "duration": 0.442469,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T15:01:08.824309",
+      "duration": 0.167784,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T15:01:08.842310",
+      "duration": 0.185785,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T15:01:09.460492",
+      "duration": 0.197988,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T15:01:09.505349",
+      "duration": 0.244841,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T15:01:10.149780",
+      "duration": 0.279693,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-17T15:01:10.557448",
+      "duration": 0.685362,
+      "status": "success"
     }
   ],
   "errors": [],
   "performance": {
-    "avg_response_time": 0.46371111904761914,
-    "total_requests": 42,
+    "avg_response_time": 0.40282734126984115,
+    "total_requests": 126,
     "success_rate": 100.0
   }
 }

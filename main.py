@@ -31,29 +31,24 @@ def log_execution(message: str):
     timestamp = datetime.now().isoformat()
     logger.info(f"[{timestamp}] {message}")
 
+# In main.py
 async def process_new_emails() -> bool:
-    """Process new emails with enhanced error handling and logging"""
     log_execution("Starting email processing cycle")
 
     try:
-        # Initialize components
         gmail_client = GmailClient()
         meeting_agent = EmailAgent()
         email_processor = EmailProcessor(gmail_client)
         
-        # Register the meeting agent
         email_processor.register_agent(EmailTopic.MEETING, meeting_agent)
         
-        # Process unread emails
         log_execution("Processing unread emails...")
         processed_count, error_count, errors = await email_processor.process_unread_emails()
         
-        # Log processing summary
         log_execution(f"Email processing cycle completed. "
                      f"Processed: {processed_count}, "
                      f"Errors: {error_count}")
         
-        # Log any errors
         if errors:
             logger.warning("Errors encountered during processing:")
             for error in errors:
@@ -67,6 +62,9 @@ async def process_new_emails() -> bool:
 
 if __name__ == "__main__":
     load_dotenv(override=True)
+    
+    # Use asyncio.run to properly handle async operations
+    
 
     log_execution("Starting one-time email processing...")
     asyncio.run(process_new_emails())
