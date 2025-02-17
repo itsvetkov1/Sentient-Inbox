@@ -45,6 +45,14 @@ This project appears to be focused on building an AI-powered email processing an
 - Dependencies: 
   - `email_classifier.py` for classification
   - `secure_storage.py` for secure data handling
+  - `deepseek_analyzer.py` for deep analysis of meeting emails
+
+#### 3. DeepseekAnalyzer
+- Location: `deepseek_analyzer.py`
+- Description: Performs deep analysis on meeting emails using Groq's deepseek r1 model.
+- Dependencies:
+  - `groq_integration.client_wrapper.GroqClient` for API calls to Groq
+  - `config/analyzer_config.py` for configuration settings
 
 #### 3. Response Generation
 - Location: `email_writer.py`
@@ -86,12 +94,20 @@ This project appears to be focused on building an AI-powered email processing an
      - Content analysis
      - Contextual understanding
      - Priority determination
+   - For emails classified as meetings:
+     - Deep analysis is performed using `deepseek_analyzer.py`
+     - The analyzer determines if a standardized response is needed, if the email should be flagged for action, or if it should be ignored
 
 4. Response Generation
-   - Responses are generated using `email_writer.py`
+   - For emails requiring a standard response, responses are generated using `email_writer.py`
    - Responses are stored in `data/email_responses.json`
 
-5. Sending
+5. Email Handling
+   - Emails flagged for action are marked for review
+   - Emails to be ignored are marked as read
+   - Emails requiring a response are processed further
+
+6. Sending
    - Generated responses are sent through `gmail.py`
    - Send history is logged in `meeting_mails.json`
 
@@ -113,6 +129,7 @@ This project appears to be focused on building an AI-powered email processing an
    - More sophisticated NLP models
    - Better context understanding
    - Improved response generation
+   - Expansion of DeepseekAnalyzer capabilities to other email types
 
 2. Additional Email Providers
    - Support for Outlook
@@ -121,11 +138,13 @@ This project appears to be focused on building an AI-powered email processing an
 3. User Interface
    - Web interface for managing email rules
    - Dashboard for monitoring email processing
+   - Visualization of DeepseekAnalyzer results
 
 4. Analytics
    - Detailed analytics of email processing
    - User behavior insights
    - Performance metrics
+   - Analysis of DeepseekAnalyzer accuracy and impact
 
 ### Known Limitations
 1. Current Limitations

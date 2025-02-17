@@ -2,8 +2,9 @@ import unittest
 from datetime import datetime
 from unittest.mock import Mock, patch
 from email_processor import EmailProcessor
-from email_classifier import EmailTopic
+from email_classifier import EmailTopic, EmailRouter
 from secure_storage import SecureStorageManager
+from deepseek_analyzer import DeepseekAnalyzer
 
 class MockGmailClient:
     """Mock Gmail client for testing."""
@@ -28,6 +29,20 @@ class MockMeetingAgent:
         
     def process_email(self, metadata):
         self.processed_emails.append(metadata)
+
+class MockDeepseekAnalyzer:
+    """Mock DeepseekAnalyzer for testing."""
+    def __init__(self):
+        self.analyzed_emails = []
+
+    async def analyze_email(self, email_content: str):
+        self.analyzed_emails.append(email_content)
+        if "meeting" in email_content.lower():
+            return "standard_response", {"explanation": "This is a meeting email"}
+        elif "urgent" in email_content.lower():
+            return "flag_for_action", {"explanation": "This email requires immediate attention"}
+        else:
+            return "ignore", {"explanation": "This email can be ignored"}
 
 class TestEmailProcessor(unittest.TestCase):
     def setUp(self):
@@ -60,9 +75,11 @@ class TestEmailProcessor(unittest.TestCase):
         self.gmail_client = MockGmailClient(self.test_emails)
         self.meeting_agent = MockMeetingAgent()
         
+        # Initialize mocks
+        self.deepseek_analyzer = MockDeepseekAnalyzer()
+        
         # Initialize processor
-        self.processor = EmailProcessor(self.gmail_client, "test_secure")
-        self.processor.register_agent(EmailTopic.MEETING, self.meeting_agent)
+        self.processor = EmailProcessor(self.gmail_client, self.meeting_agent, self.deepseek_analyzer, "test_secure")
         
     def tearDown(self):
         # Clean up any test files
@@ -71,14 +88,21 @@ class TestEmailProcessor(unittest.TestCase):
         if os.path.exists("test_secure"):
             shutil.rmtree("test_secure")
             
-    def test_email_processing(self):
+    @patch.object(EmailRouter, 'classify_email')
+    async def test_email_processing(self, mock_classify_email):
         """Test processing of different types of emails."""
-        processed_count, error_count, errors = self.processor.process_unread_emails()
+        # Mock the classify_email method to return MEETING for all emails
+        mock_classify_email.return_value = EmailTopic.MEETING
+
+        processed_count, error_count, errors = await self.processor.process_unread_emails()
         
         # Verify counts
         self.assertEqual(processed_count, 3)  # All emails should be processed
         self.assertEqual(error_count, 0)  # No errors expected
         self.assertEqual(len(errors), 0)
+        
+        # Verify all emails were analyzed by DeepseekAnalyzer
+        self.assertEqual(len(self.deepseek_analyzer.analyzed_emails), 3)
         
         # Verify meeting email was routed correctly
         self.assertEqual(len(self.meeting_agent.processed_emails), 1)
@@ -89,17 +113,21 @@ class TestEmailProcessor(unittest.TestCase):
         
         # Verify read/unread status
         self.assertIn("meeting1", self.gmail_client.marked_read)  # Requires response
-        self.assertIn("meeting2", self.gmail_client.marked_unread)  # No response needed
-        self.assertNotIn("unknown1", self.gmail_client.marked_read)  # Unknown topic
+        self.assertIn("meeting2", self.gmail_client.marked_read)  # Ignored
+        self.assertIn("unknown1", self.gmail_client.marked_read)  # Ignored
         
-    def test_duplicate_processing(self):
+    @patch.object(EmailRouter, 'classify_email')
+    async def test_duplicate_processing(self, mock_classify_email):
         """Test handling of already processed emails."""
+        # Mock the classify_email method to return MEETING for all emails
+        mock_classify_email.return_value = EmailTopic.MEETING
+
         # Process emails first time
-        self.processor.process_unread_emails()
+        await self.processor.process_unread_emails()
         initial_processed = len(self.meeting_agent.processed_emails)
         
         # Process same emails again
-        processed_count, error_count, errors = self.processor.process_unread_emails()
+        processed_count, error_count, errors = await self.processor.process_unread_emails()
         
         # Verify no duplicate processing
         self.assertEqual(len(self.meeting_agent.processed_emails), initial_processed)
@@ -117,14 +145,18 @@ class TestEmailProcessor(unittest.TestCase):
         self.assertEqual(len(self.meeting_agent.processed_emails), initial_processed)
         self.assertEqual(processed_count, 0)
         
-    def test_error_handling(self):
+    @patch.object(EmailRouter, 'classify_email')
+    async def test_error_handling(self, mock_classify_email):
         """Test handling of various error conditions."""
+        # Mock the classify_email method to return MEETING for all emails
+        mock_classify_email.return_value = EmailTopic.MEETING
+
         # Test with failing Gmail client
         failing_gmail = MockGmailClient()
         failing_gmail.get_unread_emails = Mock(side_effect=Exception("API Error"))
         
-        processor = EmailProcessor(failing_gmail, "test_secure")
-        processed_count, error_count, errors = processor.process_unread_emails()
+        processor = EmailProcessor(failing_gmail, self.meeting_agent, self.deepseek_analyzer, "test_secure")
+        processed_count, error_count, errors = await processor.process_unread_emails()
         
         self.assertEqual(processed_count, 0)
         self.assertEqual(error_count, 1)
@@ -141,10 +173,14 @@ class TestEmailProcessor(unittest.TestCase):
         self.assertTrue(error_count > 0)
         self.assertTrue(any("Agent Error" in error for error in errors))
         
-    def test_storage_integration(self):
+    @patch.object(EmailRouter, 'classify_email')
+    async def test_storage_integration(self, mock_classify_email):
         """Test integration with secure storage."""
+        # Mock the classify_email method to return MEETING for all emails
+        mock_classify_email.return_value = EmailTopic.MEETING
+
         # Process emails
-        self.processor.process_unread_emails()
+        await self.processor.process_unread_emails()
         
         # Verify storage
         storage = SecureStorageManager("test_secure")

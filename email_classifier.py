@@ -29,6 +29,7 @@ class EmailMetadata:
     topic: EmailTopic
     requires_response: bool
     raw_content: str
+    analysis_data: Optional[Dict] = None
 
 class EmailClassifier:
     """
@@ -95,6 +96,7 @@ class EmailClassifier:
             
             result = response.choices[0].message.content.strip().lower()
             logger.info(f"Model response received in {duration:.2f}s: {result}")
+            print(f"Topic classification model response: {result}")  # Add this line
             
             return EmailTopic.MEETING if result == 'meeting' else EmailTopic.UNKNOWN
             
@@ -148,6 +150,7 @@ class EmailClassifier:
             
             result = response.choices[0].message.content.strip().lower()
             logger.info(f"Model response received in {duration:.2f}s: {result}")
+            print(f"Response requirement model response: {result}")  # Add this line
             
             return result == 'yes'
             

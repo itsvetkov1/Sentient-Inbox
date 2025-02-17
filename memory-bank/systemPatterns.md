@@ -9,12 +9,14 @@
    - EmailClassifier (email_classifier.py)
    - EmailRouter (email_classifier.py)
    - Topic-specific Agents (e.g., MeetingAgent)
+   - DeepseekAnalyzer (deepseek_analyzer.py)
 
 2. Classification System
    - Topic Detection
    - Response Requirement Analysis
    - Pattern Matching
    - Agent Routing
+   - Deep Analysis for Meeting Emails
 
 3. Data Management
    - Secure Storage (secure_storage.py)
@@ -54,6 +56,8 @@ EmailProcessor → EmailClassifier
     ↓
 EmailRouter → Topic-specific Agent
     ↓
+DeepseekAnalyzer (for meeting emails)
+    ↓
 SecureStorage
 ```
 
@@ -64,6 +68,8 @@ Unread Email
 Topic Detection → Pattern Matching
     ↓
 Response Analysis → Agent Selection
+    ↓
+Deep Analysis (for meeting emails)
     ↓
 Processing Decision
 ```
@@ -99,7 +105,7 @@ Processing Decision
 ### Async Processing
 ```python
 async def process_new_emails():
-    # Fetch → Sort → Process → Respond
+    # Fetch → Sort → Process → Deep Analyze (if meeting) → Respond
 ```
 
 ### Error Recovery
@@ -111,7 +117,13 @@ async def process_with_retry():
 ### Data Flow
 ```python
 class MeetingSorter:
-    # Parse → Extract → Process → Store
+    # Parse → Extract → Process → Deep Analyze → Store
 ```
 
-This architecture ensures reliable meeting coordination through robust email processing and AI integration.
+### Deep Analysis
+```python
+async def analyze_meeting_email(email_content: str):
+    # Analyze → Categorize → Determine Action
+```
+
+This architecture ensures reliable meeting coordination through robust email processing, deep analysis, and AI integration.

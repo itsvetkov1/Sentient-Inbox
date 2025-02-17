@@ -10,6 +10,9 @@ from email_processor import EmailProcessor
 from email_classifier import EmailTopic
 from mail_sorter import MeetingSorter
 from email_writer import EmailAgent
+from meeting_analyzer import MeetingEmailAnalyzer
+from deepseek_analyzer import DeepseekAnalyzer
+from groq_integration.client_wrapper import EnhancedGroqClient
 from dotenv import load_dotenv
 
 # Configure logging
@@ -38,7 +41,10 @@ async def process_new_emails() -> bool:
     try:
         gmail_client = GmailClient()
         meeting_agent = EmailAgent()
-        email_processor = EmailProcessor(gmail_client)
+        groq_client = EnhancedGroqClient()
+        meeting_analyzer = MeetingEmailAnalyzer(groq_client)
+        deepseek_analyzer = DeepseekAnalyzer(groq_client)
+        email_processor = EmailProcessor(gmail_client, meeting_analyzer, deepseek_analyzer)
         
         email_processor.register_agent(EmailTopic.MEETING, meeting_agent)
         
@@ -48,6 +54,10 @@ async def process_new_emails() -> bool:
         log_execution(f"Email processing cycle completed. "
                      f"Processed: {processed_count}, "
                      f"Errors: {error_count}")
+        
+        print(f"\nProcessed {processed_count} emails")
+        print(f"Encountered {error_count} errors")
+        print("Check the console output above for model responses.")
         
         if errors:
             logger.warning("Errors encountered during processing:")
