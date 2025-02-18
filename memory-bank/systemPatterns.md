@@ -8,15 +8,17 @@
    - EmailProcessor (email_processor.py)
    - EmailClassifier (email_classifier.py)
    - EmailRouter (email_classifier.py)
-   - Topic-specific Agents (e.g., MeetingAgent)
+   - LlamaAnalyzer (llama_analyzer.py)
    - DeepseekAnalyzer (deepseek_analyzer.py)
+   - Topic-specific Agents (e.g., MeetingAgent)
 
-2. Classification System
+2. Analysis System
+   - Initial Analysis (LlamaAnalyzer)
+   - Deep Analysis for Meeting Emails (DeepseekAnalyzer)
    - Topic Detection
    - Response Requirement Analysis
    - Pattern Matching
    - Agent Routing
-   - Deep Analysis for Meeting Emails
 
 3. Data Management
    - Secure Storage (secure_storage.py)
@@ -27,9 +29,13 @@
 ## Design Patterns
 
 ### Singleton Pattern
-- Used in EnhancedGroqClient
-- Manages single API client instance
-- Centralizes API key handling
+- Used in GroqClientWrapper
+- Manages single API client instance for Groq
+- Centralizes API key handling for Groq
+
+### Factory Pattern
+- Used for analyzer creation (LlamaAnalyzer and DeepseekAnalyzer)
+- Configurable analyzer selection based on email type
 
 ### Strategy Pattern
 - Implemented in email processing
@@ -54,6 +60,8 @@ Gmail API → GmailClient
     ↓
 EmailProcessor → EmailClassifier
     ↓
+LlamaAnalyzer (Initial Analysis)
+    ↓
 EmailRouter → Topic-specific Agent
     ↓
 DeepseekAnalyzer (for meeting emails)
@@ -61,15 +69,17 @@ DeepseekAnalyzer (for meeting emails)
 SecureStorage
 ```
 
-### Classification Flow
+### Analysis Flow
 ```
 Unread Email
+    ↓
+Initial Analysis (LlamaAnalyzer)
     ↓
 Topic Detection → Pattern Matching
     ↓
 Response Analysis → Agent Selection
     ↓
-Deep Analysis (for meeting emails)
+Deep Analysis (DeepseekAnalyzer for meeting emails)
     ↓
 Processing Decision
 ```
@@ -81,6 +91,26 @@ Processing Decision
 - Comprehensive logging
 - Metrics tracking
 - Graceful degradation
+- Robust API response validation
+- Detailed error logging for debugging
+- Fallback mechanisms for unexpected API responses
+
+#### API Response Handling (DeepseekAnalyzer)
+```python
+try:
+    result = await response.json()
+    if "choices" not in result or not result["choices"] or "message" not in result["choices"][0]:
+        raise ValueError("Unexpected API response structure")
+    
+    content = result["choices"][0]["message"].get("content", "")
+    if not content:
+        raise ValueError("Empty content in API response")
+    
+    # Process content...
+except Exception as e:
+    logger.error(f"Error in DeepseekAnalyzer: {str(e)}", exc_info=True)
+    return "flag_for_action", {"explanation": f"Error occurred during analysis, flagging for manual review. Error: {str(e)}"}
+```
 
 ### Performance Optimization
 - Asynchronous processing
@@ -120,10 +150,16 @@ class MeetingSorter:
     # Parse → Extract → Process → Deep Analyze → Store
 ```
 
+### Initial Analysis
+```python
+async def analyze_email(message_id: str, subject: str, content: str, sender: str, email_type: EmailTopic):
+    # Analyze → Categorize → Determine Initial Action
+```
+
 ### Deep Analysis
 ```python
 async def analyze_meeting_email(email_content: str):
-    # Analyze → Categorize → Determine Action
+    # Deep Analyze → Refine Categorization → Determine Final Action
 ```
 
 This architecture ensures reliable meeting coordination through robust email processing, deep analysis, and AI integration.

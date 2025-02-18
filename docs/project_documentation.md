@@ -47,14 +47,21 @@ This project appears to be focused on building an AI-powered email processing an
   - `secure_storage.py` for secure data handling
   - `deepseek_analyzer.py` for deep analysis of meeting emails
 
-#### 3. DeepseekAnalyzer
-- Location: `deepseek_analyzer.py`
-- Description: Performs deep analysis on meeting emails using Groq's deepseek r1 model.
+#### 3. LlamaAnalyzer
+- Location: `llama_analyzer.py`
+- Description: Performs general analysis on all emails using the llama-3.3-70b-versatile model.
 - Dependencies:
-  - `groq_integration.client_wrapper.GroqClient` for API calls to Groq
+  - `groq_integration.client_wrapper.GroqClientWrapper` for API calls to Groq
   - `config/analyzer_config.py` for configuration settings
 
-#### 3. Response Generation
+#### 4. DeepseekAnalyzer
+- Location: `deepseek_analyzer.py`
+- Description: Performs deep analysis on meeting emails using DeepSeek's reasoner model.
+- Dependencies:
+  - Direct API calls to DeepSeek's API endpoint
+  - `config/analyzer_config.py` for configuration settings
+
+#### 5. Response Generation
 - Location: `email_writer.py`
 - Description: Generates human-like responses to emails based on classification and context.
 - Dependencies: 
@@ -88,26 +95,30 @@ This project appears to be focused on building an AI-powered email processing an
    - Emails are classified using `email_classifier.py`
    - Classification data is stored in `data/metrics/groq_metrics.json`
 
-3. Processing
-   - Classified emails are processed by `email_processor.py`
-   - Processing logic includes:
-     - Content analysis
-     - Contextual understanding
-     - Priority determination
-   - For emails classified as meetings:
-     - Deep analysis is performed using `deepseek_analyzer.py`
-     - The analyzer determines if a standardized response is needed, if the email should be flagged for action, or if it should be ignored
+3. Initial Analysis
+   - All emails are initially analyzed by `llama_analyzer.py` using the llama-3.3-70b-versatile model
+   - The LlamaAnalyzer determines if the email needs a standard response, needs review, or should be ignored
 
-4. Response Generation
+4. Deep Analysis for Meeting Emails
+   - For emails classified as meetings:
+     - Additional deep analysis is performed using `deepseek_analyzer.py`
+     - The DeepseekAnalyzer refines the decision, determining if a standardized response is needed, if the email should be flagged for action, or if it should be ignored
+
+5. Processing
+   - Based on the analysis results, `email_processor.py` handles the emails:
+     - Emails needing standard responses are processed for response generation
+     - Emails flagged for action are marked for review
+     - Emails to be ignored are marked as read
+
+6. Response Generation
    - For emails requiring a standard response, responses are generated using `email_writer.py`
    - Responses are stored in `data/email_responses.json`
 
-5. Email Handling
-   - Emails flagged for action are marked for review
-   - Emails to be ignored are marked as read
-   - Emails requiring a response are processed further
+7. Email Handling
+   - Processed emails are marked as read or unread based on their status
+   - Emails requiring further action are kept unread for manual review
 
-6. Sending
+8. Sending
    - Generated responses are sent through `gmail.py`
    - Send history is logged in `meeting_mails.json`
 
@@ -126,10 +137,10 @@ This project appears to be focused on building an AI-powered email processing an
 
 ### Planned Features
 1. Enhanced AI Integration
-   - More sophisticated NLP models
-   - Better context understanding
-   - Improved response generation
-   - Expansion of DeepseekAnalyzer capabilities to other email types
+   - Further optimization of LlamaAnalyzer for general email analysis
+   - Expansion of DeepseekAnalyzer capabilities for more nuanced meeting email analysis
+   - Integration of additional AI models for specialized email types
+   - Improved context understanding and response generation across all analyzers
 
 2. Additional Email Providers
    - Support for Outlook

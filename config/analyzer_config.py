@@ -1,8 +1,15 @@
 # config/analyzer_config.py
 ANALYZER_CONFIG = {
+    "default_analyzer": {
+        "model": {
+            "name": "llama-3.3-70b-versatile",
+            "temperature": 0.3,
+            "max_tokens": 2000
+        },
+    },
     "meeting_analyzer": {
         "model": {
-            "name": "gpt-3.5-turbo",
+            "name": "llama-3.3-70b-versatile",
             "temperature": 0.3,
             "max_tokens": 2000
         },
@@ -19,11 +26,11 @@ ANALYZER_CONFIG = {
     },
     "deepseek_analyzer": {
         "model": {
-            "name": "deepseek-r1",
+            "name": "deepseek-reasoner",
             "temperature": 0.3,
             "max_tokens": 5000,
-            "api_endpoint": "https://api.groq.com/openai/v1/chat/completions",
-            "api_key": "your_groq_api_key_here"
+            "api_endpoint": "https://api.deepseek.com/v1",
+            "api_key": "${DEEPSEEK_API_KEY}"
         },
         "logging": {
             "base_dir": "logs/deepseek_analyzer",

@@ -14,21 +14,21 @@ class EmailProcessor:
     Implements asynchronous processing with secure storage, thread awareness, and AI-powered analysis.
     """
     
-    def __init__(self, gmail_client, meeting_analyzer, deepseek_analyzer: DeepseekAnalyzer, storage_path: str = "data/secure"):
+    def __init__(self, gmail_client, llama_analyzer, deepseek_analyzer: DeepseekAnalyzer, storage_path: str = "data/secure"):
         """
         Initialize the email processor with required components and services.
         
         Args:
             gmail_client: Gmail API client instance
-            meeting_analyzer: MeetingEmailAnalyzer instance
-            deepseek_analyzer: DeepseekAnalyzer instance
+            llama_analyzer: LlamaAnalyzer instance for general analysis
+            deepseek_analyzer: DeepseekAnalyzer instance for meeting-specific analysis
             storage_path: Base path for secure storage
         """
         self.gmail = gmail_client
         self.router = EmailRouter()
         self.classifier = EmailClassifier()
         self.storage = SecureStorageManager(storage_path)
-        self.meeting_analyzer = meeting_analyzer
+        self.llama_analyzer = llama_analyzer
         self.deepseek_analyzer = deepseek_analyzer
         
     def register_agent(self, topic: EmailTopic, agent: object):
@@ -84,21 +84,26 @@ class EmailProcessor:
             Tuple of (recommendation, analysis_metadata)
         """
         try:
+            # Use llama-3.3-70b-versatile for initial analysis
+            recommendation, analysis = await self.llama_analyzer.analyze_email(
+                message_id=message_id,
+                subject=subject,
+                content=content,
+                sender=sender,
+                email_type=email_type
+            )
+            
+            # If it's a meeting email, use DeepSeek for additional analysis
             if email_type == EmailTopic.MEETING:
-                decision, analysis = await self.deepseek_analyzer.analyze_email(content)
-                if decision == "standard_response":
+                deepseek_decision, deepseek_analysis = await self.deepseek_analyzer.analyze_email(content)
+                if deepseek_decision == "standard_response":
                     recommendation = "needs_standard_response"
-                elif decision == "flag_for_action":
+                elif deepseek_decision == "flag_for_action":
                     recommendation = "needs_review"
-                else:  # decision == "ignore"
+                else:  # deepseek_decision == "ignore"
                     recommendation = "ignore"
-            else:
-                recommendation, analysis = await self.meeting_analyzer.analyze_meeting_email(
-                    message_id=message_id,
-                    subject=subject,
-                    content=content,
-                    sender=sender
-                )
+                analysis.update(deepseek_analysis)
+            
             logger.info(f"Analysis completed for {message_id} with recommendation: {recommendation}")
             return recommendation, analysis
         except Exception as e:

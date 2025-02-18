@@ -10,9 +10,8 @@ from email_processor import EmailProcessor
 from email_classifier import EmailTopic
 from mail_sorter import MeetingSorter
 from email_writer import EmailAgent
-from meeting_analyzer import MeetingEmailAnalyzer
+from llama_analyzer import LlamaAnalyzer
 from deepseek_analyzer import DeepseekAnalyzer
-from groq_integration.client_wrapper import EnhancedGroqClient
 from dotenv import load_dotenv
 
 # Configure logging
@@ -34,6 +33,9 @@ def log_execution(message: str):
     timestamp = datetime.now().isoformat()
     logger.info(f"[{timestamp}] {message}")
 
+# Load environment variables
+load_dotenv(override=True)
+
 # In main.py
 async def process_new_emails() -> bool:
     log_execution("Starting email processing cycle")
@@ -41,10 +43,9 @@ async def process_new_emails() -> bool:
     try:
         gmail_client = GmailClient()
         meeting_agent = EmailAgent()
-        groq_client = EnhancedGroqClient()
-        meeting_analyzer = MeetingEmailAnalyzer(groq_client)
-        deepseek_analyzer = DeepseekAnalyzer(groq_client)
-        email_processor = EmailProcessor(gmail_client, meeting_analyzer, deepseek_analyzer)
+        llama_analyzer = LlamaAnalyzer()
+        deepseek_analyzer = DeepseekAnalyzer()
+        email_processor = EmailProcessor(gmail_client, llama_analyzer, deepseek_analyzer)
         
         email_processor.register_agent(EmailTopic.MEETING, meeting_agent)
         
@@ -71,11 +72,6 @@ async def process_new_emails() -> bool:
         return False
 
 if __name__ == "__main__":
-    load_dotenv(override=True)
-    
-    # Use asyncio.run to properly handle async operations
-    
-
     log_execution("Starting one-time email processing...")
     asyncio.run(process_new_emails())
     log_execution("Processing complete")

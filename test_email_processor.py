@@ -5,6 +5,7 @@ from email_processor import EmailProcessor
 from email_classifier import EmailTopic, EmailRouter
 from secure_storage import SecureStorageManager
 from deepseek_analyzer import DeepseekAnalyzer
+from llama_analyzer import LlamaAnalyzer
 
 class MockGmailClient:
     """Mock Gmail client for testing."""
@@ -29,6 +30,20 @@ class MockMeetingAgent:
         
     def process_email(self, metadata):
         self.processed_emails.append(metadata)
+
+class MockLlamaAnalyzer:
+    """Mock LlamaAnalyzer for testing."""
+    def __init__(self):
+        self.analyzed_emails = []
+
+    async def analyze_email(self, message_id: str, subject: str, content: str, sender: str, email_type: EmailTopic):
+        self.analyzed_emails.append(content)
+        if "meeting" in content.lower():
+            return "needs_review", {"explanation": "This is a meeting email"}
+        elif "urgent" in content.lower():
+            return "needs_review", {"explanation": "This email requires immediate attention"}
+        else:
+            return "needs_standard_response", {"explanation": "This email can be handled with a standard response"}
 
 class MockDeepseekAnalyzer:
     """Mock DeepseekAnalyzer for testing."""
@@ -76,10 +91,11 @@ class TestEmailProcessor(unittest.TestCase):
         self.meeting_agent = MockMeetingAgent()
         
         # Initialize mocks
+        self.llama_analyzer = MockLlamaAnalyzer()
         self.deepseek_analyzer = MockDeepseekAnalyzer()
         
         # Initialize processor
-        self.processor = EmailProcessor(self.gmail_client, self.meeting_agent, self.deepseek_analyzer, "test_secure")
+        self.processor = EmailProcessor(self.gmail_client, self.llama_analyzer, self.deepseek_analyzer, "test_secure")
         
     def tearDown(self):
         # Clean up any test files
@@ -101,7 +117,10 @@ class TestEmailProcessor(unittest.TestCase):
         self.assertEqual(error_count, 0)  # No errors expected
         self.assertEqual(len(errors), 0)
         
-        # Verify all emails were analyzed by DeepseekAnalyzer
+        # Verify all emails were analyzed by LlamaAnalyzer
+        self.assertEqual(len(self.llama_analyzer.analyzed_emails), 3)
+        
+        # Verify meeting emails were analyzed by DeepseekAnalyzer
         self.assertEqual(len(self.deepseek_analyzer.analyzed_emails), 3)
         
         # Verify meeting email was routed correctly
@@ -113,8 +132,8 @@ class TestEmailProcessor(unittest.TestCase):
         
         # Verify read/unread status
         self.assertIn("meeting1", self.gmail_client.marked_read)  # Requires response
-        self.assertIn("meeting2", self.gmail_client.marked_read)  # Ignored
-        self.assertIn("unknown1", self.gmail_client.marked_read)  # Ignored
+        self.assertIn("meeting2", self.gmail_client.marked_unread)  # Needs review
+        self.assertIn("unknown1", self.gmail_client.marked_read)  # Standard response
         
     @patch.object(EmailRouter, 'classify_email')
     async def test_duplicate_processing(self, mock_classify_email):
@@ -155,7 +174,7 @@ class TestEmailProcessor(unittest.TestCase):
         failing_gmail = MockGmailClient()
         failing_gmail.get_unread_emails = Mock(side_effect=Exception("API Error"))
         
-        processor = EmailProcessor(failing_gmail, self.meeting_agent, self.deepseek_analyzer, "test_secure")
+        processor = EmailProcessor(failing_gmail, self.llama_analyzer, self.deepseek_analyzer, "test_secure")
         processed_count, error_count, errors = await processor.process_unread_emails()
         
         self.assertEqual(processed_count, 0)

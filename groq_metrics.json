@@ -1214,12 +1214,99 @@
       "timestamp": "2025-02-18T00:00:52.052025",
       "duration": 0.897683,
       "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T09:32:28.108106",
+      "duration": 0.229498,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T09:32:28.197118",
+      "duration": 0.314509,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T09:33:53.036144",
+      "duration": 0.653729,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T09:41:20.790519",
+      "duration": 0.720462,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T09:56:01.845490",
+      "duration": 0.800613,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T15:19:27.743046",
+      "duration": 0.722516,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T21:06:05.160867",
+      "duration": 1.806382,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T21:12:26.000171",
+      "duration": 1.000466,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T21:16:48.021975",
+      "duration": 1.029156,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-18T21:29:05.719971",
+      "duration": 0.695174,
+      "status": "success"
     }
   ],
-  "errors": [],
+  "errors": [
+    {
+      "timestamp": "2025-02-18T08:59:54.163769",
+      "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-r1` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    },
+    {
+      "timestamp": "2025-02-18T08:59:56.272870",
+      "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-r1` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    },
+    {
+      "timestamp": "2025-02-18T09:00:00.548154",
+      "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-r1` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    },
+    {
+      "timestamp": "2025-02-18T09:01:36.392207",
+      "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-r1-distill-llama-70b-r1` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    },
+    {
+      "timestamp": "2025-02-18T09:01:38.505729",
+      "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-r1-distill-llama-70b-r1` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    },
+    {
+      "timestamp": "2025-02-18T09:01:42.692503",
+      "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-r1-distill-llama-70b-r1` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    },
+    {
+      "timestamp": "2025-02-18T09:18:39.499893",
+      "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-reasoner` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    },
+    {
+      "timestamp": "2025-02-18T09:18:41.616430",
+      "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-reasoner` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    },
+    {
+      "timestamp": "2025-02-18T09:18:45.723805",
+      "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-reasoner` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    }
+  ],
   "performance": {
-    "avg_response_time": 0.440551283950617,
-    "total_requests": 243,
-    "success_rate": 100.0
+    "avg_response_time": 0.4546500671936756,
+    "total_requests": 253,
+    "success_rate": 96.44268774703558
   }
 }
