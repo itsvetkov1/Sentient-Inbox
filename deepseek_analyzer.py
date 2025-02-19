@@ -1,8 +1,7 @@
 import logging
 import aiohttp
-import json
 import os
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any, Optional
 from email_analyzers_base import BaseEmailAnalyzer
 from config.analyzer_config import ANALYZER_CONFIG
 
@@ -10,21 +9,36 @@ logger = logging.getLogger(__name__)
 
 class DeepseekAnalyzer(BaseEmailAnalyzer):
     """
-    Analyzer class for deep analysis of meeting emails using DeepSeek's reasoner model.
+    Specialized deep analysis component leveraging DeepSeek's natural language capabilities.
+    
+    This implementation provides rich, contextual analysis of email content without
+    requiring structured JSON output. The analysis is later processed by LlamaAnalyzer
+    for final decision-making.
+    
+    Key Features:
+    - Detailed natural language analysis
+    - Comprehensive error handling
+    - Robust prompt engineering
+    - Integration with LlamaAnalyzer workflow
     """
 
     def __init__(self):
-        """Initialize the DeepseekAnalyzer with configuration."""
+        """
+        Initialize analyzer with required configuration and logging infrastructure.
+        
+        Validates environment settings and establishes logging pathways for
+        production monitoring and debugging capabilities.
+        """
         super().__init__()
         self.config = ANALYZER_CONFIG["deepseek_analyzer"]
         self.api_key = os.environ.get("DEEPSEEK_API_KEY")
         if not self.api_key:
             raise ValueError("DEEPSEEK_API_KEY environment variable is not set")
         self.api_endpoint = self.config["model"]["api_endpoint"]
-        self.setup_logging()
+        self._setup_logging()
 
-    def setup_logging(self):
-        """Set up detailed logging for debugging."""
+    def _setup_logging(self) -> None:
+        """Configure comprehensive logging infrastructure."""
         log_config = self.config["logging"]
         logging.basicConfig(
             filename=f"{log_config['base_dir']}/deepseek_analyzer.log",
@@ -32,31 +46,78 @@ class DeepseekAnalyzer(BaseEmailAnalyzer):
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
 
-    async def analyze_email(self, email_content: str) -> Tuple[str, Dict]:
+    def _construct_prompt(self, email_content: str) -> str:
         """
-        Perform deep analysis on the email content using DeepSeek's reasoner model.
+        Construct analysis prompt optimized for natural language response.
+        
+        Creates a carefully engineered prompt that encourages detailed analysis
+        while maintaining consistent response structure for later processing.
         
         Args:
-            email_content: The full content of the email to be analyzed.
+            email_content: Raw email content for analysis
             
         Returns:
-            Tuple[str, Dict]: Decision and analysis details
+            str: Structured prompt for the DeepSeek model
         """
-        # Log the input
-        logger.debug(f"Analyzing email content: {email_content[:200]}...")
+        return f"""
+        Analyze this email deeply and provide a comprehensive summary:
 
-        prompt = self._construct_prompt(email_content)
+        EMAIL CONTENT:
+        {email_content}
+
+        Provide your analysis in the following structure:
+
+        MEETING DETAILS:
+        - Purpose: [Main purpose of discussed meeting(s)]
+        - Timing: [Any mentioned dates, times, durations]
+        - Participants: [Expected attendees, roles mentioned]
+        - Actions Required: [Required responses, confirmations, etc.]
+
+        PRIORITY ASSESSMENT:
+        - Urgency Level: [High/Medium/Low]
+        - Response Needed: [Yes/No]
+        - Timeline Requirements: [Any deadlines or time-sensitive elements]
+
+        ANALYSIS SUMMARY:
+        [2-3 sentences summarizing the key points and required actions]
+
+        Be specific and detailed in your analysis while maintaining this structure.
+        """
+
+    async def analyze_email(self, email_content: str) -> Tuple[str, Dict[str, Any]]:
+        """
+        Perform deep email analysis with robust error handling.
         
+        Conducts comprehensive content analysis while maintaining detailed
+        logging and error handling capabilities. Returns analysis in a format
+        suitable for LlamaAnalyzer processing.
+        
+        Args:
+            email_content: Raw email content to analyze
+            
+        Returns:
+            Tuple containing analysis text and metadata
+        """
+        if not self._validate_email_content(email_content):
+            logger.error("Invalid or empty email content provided")
+            return self._format_analysis_result(
+                "Invalid email content provided",
+                {"error": "Empty or invalid content"}
+            )
+
         try:
             async with aiohttp.ClientSession() as session:
-                # Log request payload
                 request_payload = {
                     "model": self.config["model"]["name"],
-                    "messages": [{"role": "user", "content": prompt}],
+                    "messages": [{
+                        "role": "user",
+                        "content": self._construct_prompt(email_content)
+                    }],
                     "temperature": self.config["model"]["temperature"],
                     "max_tokens": self.config["model"]["max_tokens"]
                 }
-                logger.debug(f"Request payload: {json.dumps(request_payload, indent=2)}")
+                
+                logger.debug(f"Request payload: {request_payload}")
 
                 async with session.post(
                     f"{self.api_endpoint}/chat/completions",
@@ -66,103 +127,45 @@ class DeepseekAnalyzer(BaseEmailAnalyzer):
                     },
                     json=request_payload
                 ) as response:
-                    # Log raw response
                     response_text = await response.text()
                     logger.debug(f"Raw API response: {response_text}")
-                    
+
                     if response.status != 200:
                         raise Exception(f"API request failed with status {response.status}: {response_text}")
-                    
-                    result = json.loads(response_text)
-                    
-                    # Log parsed response structure
-                    logger.debug(f"Parsed API response structure: {json.dumps(result, indent=2)}")
-                    
-                    if "choices" not in result or not result["choices"]:
-                        logger.error("No choices in API response")
-                        raise ValueError("No choices in API response")
-                        
-                    choice = result["choices"][0]
-                    if "message" not in choice:
-                        logger.error(f"No message in choice: {json.dumps(choice, indent=2)}")
-                        raise ValueError("No message in choice")
-                        
-                    content = choice["message"].get("content")
-                    if not content:
-                        logger.error("Empty or missing content in message")
-                        raise ValueError("Empty or missing content")
 
-                    # Log the content for analysis
-                    logger.debug(f"Extracted content: {content}")
+                    result = await response.json()
+                    content = result["choices"][0]["message"]["content"]
                     
-                    # Parse the response
-                    decision, explanation = self._parse_response(content)
-                    
-                    logger.info(f"Analysis complete - Decision: {decision}")
-                    logger.info(f"Full explanation: {explanation}")
-                    return decision, {"explanation": explanation}
+                    return content, {
+                        "source": "deepseek",
+                        "model": self.config["model"]["name"],
+                        "raw_response": content
+                    }
 
         except Exception as e:
-            logger.error(f"Error in DeepseekAnalyizer: {str(e)}", exc_info=True)
-            return "flag_for_action", {
-                "explanation": f"Error occurred during analysis, flagging for manual review. Error: {str(e)}"
-            }
+            logger.error(f"Error in DeepseekAnalyzer: {str(e)}", exc_info=True)
+            return str(e), {"error": str(e)}
 
-    def _construct_prompt(self, email_content: str) -> str:
-        """Construct the analysis prompt."""
-        return f"""
-        Analyze the following email content deeply and decide on the appropriate action:
-
-        {email_content}
-
-        Based on the content, determine:
-        1. Does the sender expect a standardized response?
-        2. Should the receiver take another action and flag the email?
-        3. Should the email be ignored and left unread?
-
-        Provide your decision as one of the following:
-        - "standard_response": If a standardized response is expected
-        - "flag_for_action": If the receiver should take action and the email should be flagged
-        - "ignore": If the email should be ignored and left unread
-
-        Also, provide a brief explanation for your decision.
-
-        Return your response in the following format:
-        Decision: [standard_response/flag_for_action/ignore]
-        Explanation: [Provide your complete explanation here, including all relevant details and reasoning]
+    def _format_analysis_result(self, content: str, metadata: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
         """
+        Format analysis results with consistent structure.
+        
+        Ensures analysis output maintains consistent format for LlamaAnalyzer
+        processing while preserving all relevant metadata.
+        
+        Args:
+            content: Analysis content
+            metadata: Additional analysis metadata
+            
+        Returns:
+            Tuple containing formatted content and metadata
+        """
+        return content, {
+            "source": "deepseek",
+            "timestamp": self._get_timestamp(),
+            "metadata": metadata
+        }
 
-    def _parse_response(self, content: str) -> Tuple[str, str]:
-        """Parse the model's response into decision and explanation."""
-        lines = content.strip().split('\n')
-        if len(lines) < 2:
-            raise ValueError(f"Insufficient content in response: {content}")
-            
-        decision_line = lines[0].split(':', 1)
-        if len(decision_line) < 2:
-            raise ValueError(f"Invalid decision format: {lines[0]}")
-            
-        decision = decision_line[1].strip().lower()
-        # Collect all lines after "Decision:" for the explanation
-        explanation_lines = []
-        in_explanation = False
-        for line in lines:
-            if line.strip().startswith('Explanation:'):
-                in_explanation = True
-                # Remove the "Explanation:" prefix from this line
-                current_line = line.replace('Explanation:', '', 1).strip()
-                if current_line:  # Only add if there's content after "Explanation:"
-                    explanation_lines.append(current_line)
-            elif in_explanation:
-                explanation_lines.append(line.strip())
-        
-        explanation = ' '.join(explanation_lines).strip()
-        
-        if not decision or not explanation:
-            raise ValueError("Missing decision or explanation")
-            
-        # Log parsed components
-        logger.debug(f"Parsed decision: {decision}")
-        logger.debug(f"Parsed explanation: {explanation}")
-        
-        return decision, explanation
+    def _get_timestamp(self) -> str:
+        """Generate ISO format timestamp for analysis tracking."""
+        return datetime.now().isoformat()
