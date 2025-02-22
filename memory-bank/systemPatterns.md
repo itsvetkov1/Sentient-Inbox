@@ -7,24 +7,20 @@
    - GmailClient (gmail.py)
    - EmailProcessor (email_processor.py)
    - EmailClassifier (email_classifier.py)
-   - EmailRouter (email_classifier.py)
    - LlamaAnalyzer (llama_analyzer.py)
    - DeepseekAnalyzer (deepseek_analyzer.py)
-   - Topic-specific Agents (e.g., MeetingAgent)
+   - ResponseGenerator (email_writer.py)
 
-2. Analysis System
-   - Initial Analysis (LlamaAnalyzer)
-   - Deep Analysis for Meeting Emails (DeepseekAnalyzer)
-   - Topic Detection
-   - Response Requirement Analysis
-   - Pattern Matching
-   - Agent Routing
+2. Three-Stage Analysis System
+   - Stage 1: Initial Meeting Classification (LlamaAnalyzer)
+   - Stage 2: Detailed Content Analysis (DeepseekAnalyzer)
+   - Stage 3: Final Decision Making (LlamaAnalyzer)
 
 3. Data Management
-   - Secure Storage (secure_storage.py)
-   - Backup Management
-   - Record Tracking
-   - Status Management
+   - SecureStorage (secure_storage.py)
+   - WeeklyRollingHistory
+   - StructuredDataStorage
+   - BackupManager
 
 ## Design Patterns
 
@@ -35,22 +31,21 @@
 
 ### Factory Pattern
 - Used for analyzer creation (LlamaAnalyzer and DeepseekAnalyzer)
-- Configurable analyzer selection based on email type
+- Configurable analyzer selection based on analysis stage
 
 ### Strategy Pattern
-- Implemented in email processing
-- Flexible meeting detection strategies
-- Configurable response generation
+- Implemented in email processing and response generation
+- Flexible analysis strategies for different email types
+- Configurable response templates
 
 ### Observer Pattern
 - Email monitoring system
 - Event-driven processing
 - Asynchronous operations
 
-### Factory Pattern
-- Client initialization
-- Configuration management
-- Resource creation
+### Chain of Responsibility
+- Three-stage analysis pipeline
+- Each stage can process or pass to the next
 
 ## Component Relationships
 
@@ -60,11 +55,13 @@ Gmail API → GmailClient
     ↓
 EmailProcessor → EmailClassifier
     ↓
-LlamaAnalyzer (Initial Analysis)
+Stage 1: LlamaAnalyzer (Initial Classification)
     ↓
-EmailRouter → Topic-specific Agent
+Stage 2: DeepseekAnalyzer (Detailed Analysis)
     ↓
-DeepseekAnalyzer (for meeting emails)
+Stage 3: LlamaAnalyzer (Final Decision)
+    ↓
+ResponseGenerator
     ↓
 SecureStorage
 ```
@@ -73,13 +70,13 @@ SecureStorage
 ```
 Unread Email
     ↓
-Initial Analysis (LlamaAnalyzer)
+Stage 1: Initial Classification (LlamaAnalyzer)
     ↓
-Topic Detection → Pattern Matching
+Meeting-related? → Yes → Stage 2: Detailed Analysis (DeepseekAnalyzer)
     ↓
-Response Analysis → Agent Selection
+Stage 3: Final Decision (LlamaAnalyzer)
     ↓
-Deep Analysis (DeepseekAnalyzer for meeting emails)
+Categorization (standard_response, needs_review, ignored)
     ↓
 Processing Decision
 ```
@@ -87,79 +84,79 @@ Processing Decision
 ## Technical Decisions
 
 ### Error Handling
-- Exponential backoff retry
-- Comprehensive logging
+- Single retry attempt with 3-second delay
+- Comprehensive DEBUG level logging
 - Metrics tracking
 - Graceful degradation
 - Robust API response validation
-- Detailed error logging for debugging
-- Fallback mechanisms for unexpected API responses
-
-#### API Response Handling (DeepseekAnalyzer)
-```python
-try:
-    result = await response.json()
-    if "choices" not in result or not result["choices"] or "message" not in result["choices"][0]:
-        raise ValueError("Unexpected API response structure")
-    
-    content = result["choices"][0]["message"].get("content", "")
-    if not content:
-        raise ValueError("Empty content in API response")
-    
-    # Process content...
-except Exception as e:
-    logger.error(f"Error in DeepseekAnalyzer: {str(e)}", exc_info=True)
-    return "flag_for_action", {"explanation": f"Error occurred during analysis, flagging for manual review. Error: {str(e)}"}
-```
+- Detailed error logging for troubleshooting
 
 ### Performance Optimization
+- Batch processing (100 emails per cycle)
 - Asynchronous processing
-- Batch operations
-- Caching strategy
+- Weekly rolling history for efficient deduplication
 - Response time monitoring
 
 ### Data Management
-- Structured JSON storage
-- Deduplication logic
-- Metrics aggregation
-- Cache management
+- Structured JSON storage with confidence scores
+- Weekly rolling history for deduplication
+- Encrypted storage for processed emails and sensitive data
+- Robust backup and recovery mechanisms
 
 ### Security
+- OAuth2 authentication for Gmail integration
 - Environment-based configuration
 - API key protection
-- Secure storage practices
-- Error message sanitization
+- Secure storage with encryption
+- Regular security audits
 
 ## Implementation Patterns
 
-### Async Processing
+### Batch Processing
 ```python
-async def process_new_emails():
-    # Fetch → Sort → Process → Deep Analyze (if meeting) → Respond
+async def process_email_batch(batch_size: int = 100):
+    # Fetch → Deduplicate → Process → Store
 ```
 
-### Error Recovery
+### Three-Stage Analysis
 ```python
-async def process_with_retry():
-    # Attempt → Retry → Backoff → Report
+async def analyze_email(email_content: str):
+    # Stage 1: Initial Classification
+    initial_classification = await llama_analyzer.classify(email_content)
+    
+    if initial_classification == "meeting_related":
+        # Stage 2: Detailed Analysis
+        detailed_analysis = await deepseek_analyzer.analyze(email_content)
+        
+        # Stage 3: Final Decision
+        final_decision = await llama_analyzer.make_decision(detailed_analysis)
+    else:
+        final_decision = initial_classification
+    
+    return final_decision
 ```
 
-### Data Flow
+### Response Generation
 ```python
-class MeetingSorter:
-    # Parse → Extract → Process → Deep Analyze → Store
+def generate_response(email_category: str, parameters: dict):
+    if email_category == "standard_response":
+        return ResponseGenerator.generate_standard_response(parameters)
+    elif email_category == "needs_review":
+        return ResponseGenerator.flag_for_review(parameters)
+    else:
+        return None  # No response for ignored emails
 ```
 
-### Initial Analysis
+### Secure Data Management
 ```python
-async def analyze_email(message_id: str, subject: str, content: str, sender: str, email_type: EmailTopic):
-    # Analyze → Categorize → Determine Initial Action
+class SecureStorage:
+    def store_processed_email(email_id: str, analysis_result: dict):
+        encrypted_data = self.encrypt(analysis_result)
+        self.db.store(email_id, encrypted_data)
+    
+    def retrieve_processed_email(email_id: str) -> dict:
+        encrypted_data = self.db.retrieve(email_id)
+        return self.decrypt(encrypted_data)
 ```
 
-### Deep Analysis
-```python
-async def analyze_meeting_email(email_content: str):
-    # Deep Analyze → Refine Categorization → Determine Final Action
-```
-
-This architecture ensures reliable meeting coordination through robust email processing, deep analysis, and AI integration.
+This architecture ensures reliable and secure email management through a sophisticated three-stage analysis pipeline, robust error handling, and efficient data management practices.

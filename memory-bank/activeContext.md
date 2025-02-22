@@ -1,96 +1,87 @@
 # Active Context
 
 ## Current Focus
-- Enhanced email analysis using AI models
-- Improved email classification and routing system
-- Automated response management
-- Secure storage integration
+- Debugging the project to ensure correct operation
+- Implementing the three-stage email analysis pipeline
+- Enhancing email classification and response management
+- Integrating Llama and Deepseek R1 models for comprehensive analysis
+- Improving secure storage and data management
 
 ## Recent Changes
-- Implemented LlamaAnalyzer for general email analysis
-- Updated DeepseekAnalyzer for meeting-specific analysis
-- Modified email processing workflow to use both analyzers
-- Updated configuration to use environment variables for API keys
-- Refactored main.py to initialize and use new analyzers
-- Updated test suite to reflect new email processing flow
-- Improved error handling in DeepseekAnalyzer to address 'NoneType' object issues
-- Enhanced logging in DeepseekAnalyzer for better error tracking
-- Implemented robust content validation in DeepseekAnalyzer
-- Added detailed error messages for various failure scenarios in DeepseekAnalyzer
+- Introduced three-stage email analysis pipeline (Llama -> Deepseek R1 -> Llama)
+- Updated email processing workflow to incorporate new pipeline
+- Implemented weekly rolling history for deduplication
+- Enhanced error handling with single retry attempt and 3-second delay
+- Improved logging system to DEBUG level for comprehensive tracking
+- Implemented structured output handling for AI model responses
+- Updated configuration to use environment variables for API keys and sensitive data
+- Refactored main components to align with new architecture
 
 ## Active Decisions
 
 1. Email Processing
-   - Two-stage analysis system (LlamaAnalyzer for initial, DeepseekAnalyzer for meetings)
-   - Topic-based classification system
-   - Extensible agent architecture
-   - Smart response requirement detection
-   - Secure record keeping
+   - Three-stage analysis system (Llama for initial classification and final decision, Deepseek R1 for detailed analysis)
+   - Batch processing of 100 emails per cycle
+   - Strict classification criteria for standard_response, needs_review, and ignored categories
+   - Enhanced parameter validation and handling
 
 2. System Architecture
-   - Modular component design
-   - Agent-based processing
-   - Pattern-based classification
-   - Robust error handling
+   - Microservice-ready component design
+   - Integration of multiple AI models (Llama and Deepseek R1)
+   - Comprehensive logging and error handling
+   - Preparation for future frontend integration
 
 3. Data Management
-   - Encrypted storage for processed emails
-   - Automatic cleanup of old records
-   - Backup and restore capabilities
-   - Status tracking system
+   - Weekly rolling history implementation for deduplication
+   - Encrypted storage for processed emails and sensitive data
+   - Structured data storage with confidence scores
+   - Robust backup and recovery mechanisms
 
 ## Next Steps
 
-1. Testing & Validation
-   - Develop comprehensive unit tests for DeepseekAnalyzer to cover new error handling scenarios
-   - Update integration tests to verify DeepseekAnalyzer's behavior with various API responses
-   - Implement stress tests to ensure robustness of error handling under high load
-   - Validate logging and error reporting functionality
-   - Create test cases for edge cases and unexpected API responses
+1. Debugging and Optimization
+   - Identify and resolve issues preventing correct operation
+   - Optimize performance of the three-stage analysis pipeline
+   - Enhance error handling and recovery mechanisms
+   - Improve integration between Llama and Deepseek R1 models
 
-2. Core Functionality
-   - Implement similar robust error handling for LlamaAnalyzer
-   - Fine-tune LlamaAnalyzer for improved general email analysis
-   - Further enhance DeepseekAnalyzer's meeting email analysis capabilities
-   - Optimize response generation based on dual-analyzer input
-   - Expand metrics collection to include analyzer performance and error rates
+2. Core Functionality Enhancement
+   - Implement agent coordination system
+   - Develop monitoring dashboard for system oversight
+   - Create agent configuration interface for easy adjustments
+   - Enhance response template system for more dynamic responses
 
-3. Documentation
-   - Update API documentation to reflect new error handling in DeepseekAnalyzer
-   - Create troubleshooting guide for common error scenarios
-   - Document best practices for error handling in AI-powered email analysis
-   - Update setup instructions with new error handling considerations
+3. Testing and Validation
+   - Develop comprehensive unit tests for each stage of the analysis pipeline
+   - Create integration tests to verify end-to-end email processing
+   - Implement stress tests to ensure system stability under high load
+   - Validate logging and error reporting functionality across all components
 
-3. Documentation
-   - Add API documentation
-   - Create usage guides
-   - Document error patterns
-   - Update setup instructions
+4. Documentation and Standardization
+   - Update API documentation to reflect new system architecture
+   - Create detailed guides for system setup and configuration
+   - Document best practices for AI-powered email analysis and response generation
+   - Standardize error handling and logging practices across all components
 
 ## Current Considerations
 
 ### Technical
-- AI model performance optimization for both LlamaAnalyzer and DeepseekAnalyzer
-- Email processing efficiency in dual-analyzer setup
-- Continuous improvement of error handling robustness across multiple API calls
-- Metrics analysis implementation for comparative analyzer performance and error rates
-- Integration and synergy between LlamaAnalyzer and DeepseekAnalyzer
-- Standardization of error handling patterns across all analyzer components
-- Implementation of circuit breakers or fallback mechanisms for API failures
-- Exploration of retry strategies for transient errors
+- Performance optimization of the three-stage analysis pipeline
+- Integration challenges between Llama and Deepseek R1 models
+- Scalability of the batch processing system
+- Implementation of robust error recovery mechanisms
+- Metrics collection and analysis for pipeline performance
 
 ### Functional
-- General email analysis accuracy (LlamaAnalyzer)
-- Meeting detection and analysis accuracy (DeepseekAnalyzer)
-- Response appropriateness based on dual-analyzer input
-- Processing speed with multiple analysis stages
-- System reliability with increased complexity
+- Accuracy of meeting detection and classification
+- Appropriateness of generated responses
+- Handling of complex email scenarios (attachments, multiple requests)
+- User experience for manual review process
 
 ### Security
-- Enhanced encryption with key rotation
-- Automated backup system
-- Data integrity verification
-- Robust error recovery
-- Secure key management
+- Enhanced encryption for data at rest and in transit
+- Secure handling of API keys and sensitive configuration data
+- Implementation of strict access controls
+- Regular security audits and vulnerability assessments
 
-This context guides current development priorities and immediate next steps.
+This context guides our current development priorities and immediate next steps in debugging and enhancing the email management system.

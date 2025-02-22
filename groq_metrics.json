@@ -1469,6 +1469,136 @@
       "timestamp": "2025-02-19T15:41:04.779868",
       "duration": 1.245004,
       "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T09:09:06.106684",
+      "duration": 0.303084,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T09:09:06.118264",
+      "duration": 0.310662,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T09:09:06.534372",
+      "duration": 0.140994,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T09:09:06.543062",
+      "duration": 0.146688,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T09:09:06.907514",
+      "duration": 0.13721,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T09:09:06.913440",
+      "duration": 0.140141,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T16:54:06.266163",
+      "duration": 0.243007,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T16:54:06.295586",
+      "duration": 0.27743,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T16:54:06.727432",
+      "duration": 0.148702,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T16:54:07.497331",
+      "duration": 0.914556,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T16:54:07.862725",
+      "duration": 0.134279,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-20T16:54:07.867730",
+      "duration": 0.134284,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:25.610124",
+      "duration": 2.898148,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:25.618105",
+      "duration": 2.90013,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:26.101193",
+      "duration": 0.144622,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:26.117962",
+      "duration": 0.153391,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:26.698733",
+      "duration": 0.284285,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:26.799665",
+      "duration": 0.393335,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:27.246677",
+      "duration": 0.159,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:27.255678",
+      "duration": 0.173999,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:33:25.227248",
+      "duration": 0.883134,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:33:27.131853",
+      "duration": 1.203641,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T10:33:28.898490",
+      "duration": 0.862312,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T11:31:53.337803",
+      "duration": 0.825802,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T11:31:55.031952",
+      "duration": 0.926732,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-22T11:31:57.182963",
+      "duration": 1.271205,
+      "status": "success"
     }
   ],
   "errors": [
@@ -1507,11 +1637,59 @@
     {
       "timestamp": "2025-02-18T09:18:45.723805",
       "error": "Error code: 404 - {'error': {'message': 'The model `deepseek-reasoner` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'code': 'model_not_found'}}"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:15.881443",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 23903, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:15.895734",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 23911, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:18.057341",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 23911, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:18.064344",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 23903, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:22.259509",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 23911, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T10:06:22.420135",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 23903, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T10:33:16.902790",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 24080, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T10:33:19.250534",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 24080, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T10:33:23.558997",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 24080, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T11:31:44.397574",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 24080, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T11:31:47.025262",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 24080, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
+    },
+    {
+      "timestamp": "2025-02-22T11:31:51.666398",
+      "error": "Error code: 413 - {'error': {'message': 'Request too large for model `llama-3.3-70b-versatile` in organization `org_01hxe8m45ve3nbsgz2mq4h7zyc` service tier `on_demand` on tokens per minute (TPM): Limit 6000, Requested 24080, please reduce your message size and try again. Visit https://console.groq.com/docs/rate-limits for more information.', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}"
     }
   ],
   "performance": {
-    "avg_response_time": 0.58809687755102,
-    "total_requests": 294,
-    "success_rate": 96.93877551020408
+    "avg_response_time": 0.590660171875,
+    "total_requests": 320,
+    "success_rate": 93.4375
   }
 }

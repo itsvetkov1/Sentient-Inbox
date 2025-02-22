@@ -4,8 +4,20 @@ ANALYZER_CONFIG = {
         "model": {
             "name": "llama-3.3-70b-versatile",
             "temperature": 0.3,
-            "max_tokens": 2000
+            "max_tokens": 2000,
+            "max_input_tokens": 4000,
+            "retry_count": 3,
+            "retry_delay": 2
         },
+        "content_processing": {
+            "preserve_patterns": [
+                r'meeting\s+at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?',
+                r'schedule.*meeting',
+                r'discuss.*at\s+\d{1,2}(?::\d{2})?'
+            ],
+            "max_paragraphs": 3,
+            "token_buffer": 500
+        }
     },
     "meeting_analyzer": {
         "model": {

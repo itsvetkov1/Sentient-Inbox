@@ -11,18 +11,19 @@ import logging
 from pathlib import Path
 import shutil
 import time
+import asyncio
 
 logger = logging.getLogger(__name__)
 
 # Constants for security settings
 KEY_ROTATION_DAYS = 30
 BACKUP_RETENTION_DAYS = 7
-MAX_RETRIES = 3
-RETRY_DELAY = 1  # seconds
+MAX_RETRIES = 1
+RETRY_DELAY = 3  # seconds
+WEEKLY_HISTORY_DAYS = 7
 
-
-class SecureStorageManager:
-    """Manages secure storage of email records with encryption and automatic cleanup."""
+class SecureStorage:
+    """Manages secure storage of email records with encryption, automatic cleanup, and weekly rolling history."""
 
     def __init__(self, storage_path: str = "data/secure"):
         """Initialize the secure storage manager with encryption setup."""
@@ -51,6 +52,9 @@ class SecureStorageManager:
                     "data_version": 1
                 }
             })
+
+        # Set up logging
+        logging.basicConfig(level=logging.DEBUG)
 
     def _generate_secure_key(self, extra_entropy: Optional[bytes] = None) -> bytes:
         """Generate a secure encryption key using system-specific information."""
@@ -321,20 +325,20 @@ class SecureStorageManager:
             logger.error(f"Error during backup restoration: {e}")
             return False
 
-    def rotate_key(self) -> bool:
+    async def rotate_key(self) -> bool:
         """Rotate encryption key and re-encrypt data."""
         try:
             # Check if rotation is needed
-            data = self._read_encrypted_data()
+            data = await asyncio.to_thread(self._read_encrypted_data)
             last_rotation = datetime.fromisoformat(data["metadata"]["last_key_rotation"])
             if datetime.now() - last_rotation < timedelta(days=KEY_ROTATION_DAYS):
                 return True
 
             # Generate new key
-            new_key = self._generate_secure_key(os.urandom(32))
+            new_key = await asyncio.to_thread(self._generate_secure_key, os.urandom(32))
             
             # Create backup before rotation
-            if not self._create_backup():
+            if not await asyncio.to_thread(self._create_backup):
                 logger.error("Failed to create backup before key rotation")
                 return False
             
@@ -345,12 +349,12 @@ class SecureStorageManager:
             
             # Update metadata and save
             data["metadata"]["last_key_rotation"] = datetime.now().isoformat()
-            success = self._write_encrypted_data(data)
+            success = await asyncio.to_thread(self._write_encrypted_data, data)
             
             if success:
                 # Keep limited key history
                 self.keys = self.keys[:3]  # Keep last 3 keys
-                self._save_keys(self.keys)
+                await asyncio.to_thread(self._save_keys, self.keys)
                 return True
             return False
 
@@ -358,7 +362,41 @@ class SecureStorageManager:
             logger.error(f"Error rotating encryption key: {e}")
             return False
 
-    def add_record(self, email_data: Dict[str, Any], force_cleanup: bool = False) -> Tuple[str, bool]:
+    async def _cleanup_old_records(self, retention_days: int = 30, force: bool = False) -> bool:
+        """Remove records older than the retention period.
+        Args:
+            retention_days: Number of days to retain records
+            force: If True, ignores last_cleanup timestamp (for testing)
+        Returns: True if cleanup was successful, False otherwise."""
+        try:
+            data = await asyncio.to_thread(self._read_encrypted_data)
+            now = datetime.now()
+
+            # Check if cleanup is needed (unless forced)
+            if not force:
+                last_cleanup = data["metadata"].get("last_cleanup")
+                if last_cleanup:
+                    last_cleanup_date = datetime.fromisoformat(last_cleanup)
+                    if last_cleanup_date > now - timedelta(days=1):
+                        return True
+
+            # Keep only records within retention period
+            cutoff_date = now - timedelta(days=retention_days)
+            original_records = data["records"]
+            data["records"] = [
+                record for record in original_records
+                if datetime.fromisoformat(record.get("timestamp", "2000-01-01")) > cutoff_date
+            ]
+
+            # Update cleanup timestamp and write changes
+            data["metadata"]["last_cleanup"] = now.isoformat()
+            return await asyncio.to_thread(self._write_encrypted_data, data)
+
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}")
+            return False
+
+    async def add_record(self, email_data: Dict[str, Any], force_cleanup: bool = False) -> Tuple[str, bool]:
         """Add a new email record to secure storage.
         Args:
             email_data: The email data to store
@@ -392,13 +430,13 @@ class SecureStorageManager:
             }
 
             # Read existing data, add new record, and write back
-            data = self._read_encrypted_data()
+            data = await asyncio.to_thread(self._read_encrypted_data)
             data["records"].append(sanitized_record)
             
-            if self._write_encrypted_data(data):
+            if await asyncio.to_thread(self._write_encrypted_data, data):
                 # Trigger maintenance operations
-                self._cleanup_old_records(force=force_cleanup)
-                self.rotate_key()  # Check and rotate key if needed
+                await self._cleanup_old_records(force=force_cleanup)
+                await self.rotate_key()  # Check and rotate key if needed
                 return record_id, True
             return record_id, False
 
@@ -406,7 +444,7 @@ class SecureStorageManager:
             logger.error(f"Error adding record: {e}")
             return "", False
 
-    def is_processed(self, message_id: str) -> Tuple[bool, bool]:
+    async def is_processed(self, message_id: str) -> Tuple[bool, bool]:
         """
         Check if an email has been processed using its message ID.
         Also checks if any message in the same thread has been processed.
@@ -418,7 +456,7 @@ class SecureStorageManager:
                 return False, True  # Not processed, but operation succeeded
 
             # Get all records
-            data = self._read_encrypted_data()
+            data = await asyncio.to_thread(self._read_encrypted_data)
             records = data.get("records", [])
             
             # First check direct message ID match
@@ -437,44 +475,10 @@ class SecureStorageManager:
             logger.error(f"Error checking processed status: {e}")
             return False, False
 
-    def _cleanup_old_records(self, retention_days: int = 30, force: bool = False) -> bool:
-        """Remove records older than the retention period.
-        Args:
-            retention_days: Number of days to retain records
-            force: If True, ignores last_cleanup timestamp (for testing)
-        Returns: True if cleanup was successful, False otherwise."""
-        try:
-            data = self._read_encrypted_data()
-            now = datetime.now()
-
-            # Check if cleanup is needed (unless forced)
-            if not force:
-                last_cleanup = data["metadata"].get("last_cleanup")
-                if last_cleanup:
-                    last_cleanup_date = datetime.fromisoformat(last_cleanup)
-                    if last_cleanup_date > now - timedelta(days=1):
-                        return True
-
-            # Keep only records within retention period
-            cutoff_date = now - timedelta(days=retention_days)
-            original_records = data["records"]
-            data["records"] = [
-                record for record in original_records
-                if datetime.fromisoformat(record.get("timestamp", "2000-01-01")) > cutoff_date
-            ]
-
-            # Update cleanup timestamp and write changes
-            data["metadata"]["last_cleanup"] = now.isoformat()
-            return self._write_encrypted_data(data)
-
-        except Exception as e:
-            logger.error(f"Error during cleanup: {e}")
-            return False
-
-    def get_record_count(self) -> int:
+    async def get_record_count(self) -> int:
         """Get the total number of records (for monitoring purposes only)."""
         try:
-            data = self._read_encrypted_data()
+            data = await asyncio.to_thread(self._read_encrypted_data)
             return len(data.get("records", []))
         except Exception as e:
             logger.error(f"Error getting record count: {e}")

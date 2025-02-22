@@ -78,3 +78,8 @@ doc/_build/
 client_secret*.json
 token*.json
 credentials*.json
+
+
+# Backup files
+data/secure/backups/
+*.bin

@@ -1,59 +1,63 @@
-# Email Meeting Coordinator System
+# Email Management System
 
 ## Project Overview
-An automated email management system that specializes in meeting coordination through Gmail integration. The system processes incoming emails to identify, analyze, and respond to meeting requests using AI-powered agents and Groq integration.
+An advanced automated email management system focused on meeting coordination through Gmail integration. The system employs a sophisticated AI-powered architecture using Groq, with specialized components designed for efficient email processing and response handling. The foundation includes secure storage encryption and Gmail integration with OAuth2 authentication.
 
-## Core Components
+## Core Architecture
 
-### Email Processing Pipeline
-1. Gmail Integration
-   - OAuth 2.1 authentication
-   - New email fetching
-   - Response management
+### Three-Stage Email Analysis Pipeline
+1. Initial Meeting Classification (Llama Model)
+   - Binary classification of emails (meeting-related or not)
+   - Processing of new, unhandled emails using unique identifiers
+   - Weekly rolling history maintenance for deduplication
 
-2. Meeting Processing
-   - MeetingSorter for request identification
-   - EmailAgent for response generation
-   - Automated scheduling coordination
+2. Detailed Content Analysis (Deepseek R1 Model)
+   - Comprehensive content analysis for meeting-related emails
+   - Extraction of meeting parameters with confidence scores
+   - Assessment of email complexity and clarity
+   - Identification of missing or unclear information
 
-3. AI Integration
-   - Groq API integration
-   - Context-aware response generation
-   - Meeting request analysis
+3. Final Decision Making (Llama Model)
+   - Review of Deepseek analysis output
+   - Evaluation of confidence scores and identified complexities
+   - Final categorization: standard_response, needs_review, or ignored
+
+### Email Processing Rules
+- Required meeting details: Date, Time, Location
+- Standard response template with parameter insertion
+- Batch processing of 100 emails per cycle
+- Error handling with single retry attempt and 3-second delay
 
 ## Technical Requirements
-- Python async implementation
-- Gmail API integration
-- Groq API for AI processing
-- Comprehensive logging system
-- Secure data handling
-- Error recovery mechanisms
+- Groq API integration for AI processing
+- Gmail API integration with OAuth2 authentication
+- Secure storage with encryption
+- Comprehensive logging system (DEBUG level)
+- Robust error handling and recovery mechanisms
 
 ## Project Goals
-1. Automate meeting request processing
-2. Provide intelligent response generation
-3. Maintain processing reliability
-4. Ensure secure email handling
-5. Enable efficient batch processing
-
-## Success Criteria
-- Accurate meeting request identification
-- Appropriate response generation
-- Reliable email processing
-- Secure data management
-- Comprehensive logging and monitoring
+1. Implement core email processing pipeline
+2. Develop comprehensive logging system
+3. Create robust error handling mechanisms
+4. Design microservice-ready components
+5. Prepare for frontend integration
 
 ## Current Status
-- Core email fetching implemented
-- Meeting sorting system functional
-- Response generation active
-- Logging system in place
-- Error handling implemented
+- Foundation for email processing pipeline implemented
+- Secure storage and Gmail integration in place
+- Initial AI model integration completed
 
-## Next Steps
-1. Enhance response quality
-2. Optimize processing pipeline
-3. Expand monitoring capabilities
-4. Implement advanced security features
+## Next Steps (High Priority)
+1. Implement agent coordination system
+2. Develop monitoring dashboard
+3. Create agent configuration interface
+4. Enhance response template system
 
-This system aims to streamline meeting coordination through intelligent email processing while maintaining high standards of reliability and security.
+## Future Enhancements
+- Auto-reminder system development
+- Calendar integration with conflict detection
+- Frontend customization options
+- Advanced PII detection and handling
+- Performance metrics expansion
+
+This system aims to provide a robust, scalable email management solution with advanced AI capabilities for efficient meeting coordination and response handling.

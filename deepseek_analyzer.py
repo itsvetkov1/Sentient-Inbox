@@ -1,6 +1,8 @@
 import logging
 import aiohttp
 import os
+import asyncio
+from datetime import datetime
 from typing import Dict, Tuple, Any, Optional
 from email_analyzers_base import BaseEmailAnalyzer
 from config.analyzer_config import ANALYZER_CONFIG
@@ -17,7 +19,7 @@ class DeepseekAnalyzer(BaseEmailAnalyzer):
     
     Key Features:
     - Detailed natural language analysis
-    - Comprehensive error handling
+    - Comprehensive error handling with retry mechanism
     - Robust prompt engineering
     - Integration with LlamaAnalyzer workflow
     """
@@ -81,12 +83,18 @@ class DeepseekAnalyzer(BaseEmailAnalyzer):
         ANALYSIS SUMMARY:
         [2-3 sentences summarizing the key points and required actions]
 
+        DECISION:
+        Based on your analysis, categorize this email as one of the following:
+        - "standard_response": For emails that can be handled with a standard response
+        - "needs_review": For complex emails or those requiring human attention
+        - "ignore": For emails that don't require any action
+
         Be specific and detailed in your analysis while maintaining this structure.
         """
 
     async def analyze_email(self, email_content: str) -> Tuple[str, Dict[str, Any]]:
         """
-        Perform deep email analysis with robust error handling.
+        Perform deep email analysis with robust error handling and retry mechanism.
         
         Conducts comprehensive content analysis while maintaining detailed
         logging and error handling capabilities. Returns analysis in a format
@@ -96,57 +104,91 @@ class DeepseekAnalyzer(BaseEmailAnalyzer):
             email_content: Raw email content to analyze
             
         Returns:
-            Tuple containing analysis text and metadata
+            Tuple containing decision and detailed analysis
         """
         if not self._validate_email_content(email_content):
             logger.error("Invalid or empty email content provided")
-            return self._format_analysis_result(
+            return "needs_review", self._format_analysis_result(
                 "Invalid email content provided",
                 {"error": "Empty or invalid content"}
             )
 
-        try:
-            async with aiohttp.ClientSession() as session:
-                request_payload = {
-                    "model": self.config["model"]["name"],
-                    "messages": [{
-                        "role": "user",
-                        "content": self._construct_prompt(email_content)
-                    }],
-                    "temperature": self.config["model"]["temperature"],
-                    "max_tokens": self.config["model"]["max_tokens"]
-                }
-                
-                logger.debug(f"Request payload: {request_payload}")
+        max_retries = 1
+        retry_delay = 3  # seconds
 
-                async with session.post(
-                    f"{self.api_endpoint}/chat/completions",
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {self.api_key}"
-                    },
-                    json=request_payload
-                ) as response:
-                    response_text = await response.text()
-                    logger.debug(f"Raw API response: {response_text}")
-
-                    if response.status != 200:
-                        raise Exception(f"API request failed with status {response.status}: {response_text}")
-
-                    result = await response.json()
-                    content = result["choices"][0]["message"]["content"]
-                    
-                    return content, {
-                        "source": "deepseek",
+        for attempt in range(max_retries + 1):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    request_payload = {
                         "model": self.config["model"]["name"],
-                        "raw_response": content
+                        "messages": [{
+                            "role": "user",
+                            "content": self._construct_prompt(email_content)
+                        }],
+                        "temperature": self.config["model"]["temperature"],
+                        "max_tokens": self.config["model"]["max_tokens"]
                     }
+                    
+                    logger.debug(f"Request payload: {request_payload}")
 
-        except Exception as e:
-            logger.error(f"Error in DeepseekAnalyzer: {str(e)}", exc_info=True)
-            return str(e), {"error": str(e)}
+                    async with session.post(
+                        f"{self.api_endpoint}/chat/completions",
+                        headers={
+                            "Content-Type": "application/json",
+                            "Authorization": f"Bearer {self.api_key}"
+                        },
+                        json=request_payload
+                    ) as response:
+                        response_text = await response.text()
+                        logger.debug(f"Raw API response: {response_text}")
 
-    def _format_analysis_result(self, content: str, metadata: Dict[str, Any]) -> Tuple[str, Dict[str, Any]]:
+                        if response.status != 200:
+                            raise Exception(f"API request failed with status {response.status}: {response_text}")
+
+                        result = await response.json()
+                        content = result["choices"][0]["message"]["content"]
+                        
+                        # Extract decision from the content
+                        decision = self._extract_decision(content)
+                        
+                        return decision, self._format_analysis_result(content, {
+                            "source": "deepseek",
+                            "model": self.config["model"]["name"],
+                            "raw_response": content
+                        })
+
+            except Exception as e:
+                logger.error(f"Error in DeepseekAnalyzer (Attempt {attempt + 1}): {str(e)}", exc_info=True)
+                if attempt < max_retries:
+                    logger.info(f"Retrying in {retry_delay} seconds...")
+                    await asyncio.sleep(retry_delay)
+                else:
+                    return "needs_review", self._format_analysis_result(str(e), {"error": str(e)})
+
+    def _extract_decision(self, content: str) -> str:
+        """
+        Extract the decision from the analysis content.
+        
+        Args:
+            content: Full analysis content
+            
+        Returns:
+            str: Extracted decision (standard_response, needs_review, or ignore)
+        """
+        decision_line = [line for line in content.split('\n') if line.startswith("DECISION:")][0]
+        decision = decision_line.split(':')[1].strip().lower()
+        
+        if "standard_response" in decision:
+            return "standard_response"
+        elif "needs_review" in decision:
+            return "needs_review"
+        elif "ignore" in decision:
+            return "ignore"
+        else:
+            logger.warning(f"Unexpected decision: {decision}. Defaulting to 'needs_review'")
+            return "needs_review"
+
+    def _format_analysis_result(self, content: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
         """
         Format analysis results with consistent structure.
         
@@ -158,9 +200,10 @@ class DeepseekAnalyzer(BaseEmailAnalyzer):
             metadata: Additional analysis metadata
             
         Returns:
-            Tuple containing formatted content and metadata
+            Dict containing formatted content and metadata
         """
-        return content, {
+        return {
+            "content": content,
             "source": "deepseek",
             "timestamp": self._get_timestamp(),
             "metadata": metadata

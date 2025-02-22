@@ -1,22 +1,20 @@
 import asyncio
-import json
 import logging
 from datetime import datetime
-from typing import Optional
 from pathlib import Path
 
 from gmail import GmailClient
 from email_processor import EmailProcessor
 from email_classifier import EmailTopic
-from mail_sorter import MeetingSorter
 from email_writer import EmailAgent
-from llama_analyzer import LlamaAnalyzer
+from analyzers.llama_analyzer import LlamaAnalyzer
 from deepseek_analyzer import DeepseekAnalyzer
+from secure_storage import SecureStorage
 from dotenv import load_dotenv
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler('logs/main.log'),
@@ -31,34 +29,34 @@ Path('logs').mkdir(exist_ok=True)
 def log_execution(message: str):
     """Log execution with timestamp"""
     timestamp = datetime.now().isoformat()
-    logger.info(f"[{timestamp}] {message}")
+    logger.debug(f"[{timestamp}] {message}")
 
 # Load environment variables
 load_dotenv(override=True)
 
-# In main.py
-async def process_new_emails() -> bool:
-    log_execution("Starting email processing cycle")
+async def process_email_batch(batch_size: int = 100) -> bool:
+    log_execution(f"Starting email processing cycle for batch of {batch_size} emails")
 
     try:
         gmail_client = GmailClient()
         meeting_agent = EmailAgent()
         llama_analyzer = LlamaAnalyzer()
         deepseek_analyzer = DeepseekAnalyzer()
-        email_processor = EmailProcessor(gmail_client, llama_analyzer, deepseek_analyzer)
+        secure_storage = SecureStorage()
+        email_processor = EmailProcessor(gmail_client, llama_analyzer, deepseek_analyzer, secure_storage)
         
         email_processor.register_agent(EmailTopic.MEETING, meeting_agent)
         
-        log_execution("Processing unread emails...")
-        processed_count, error_count, errors = await email_processor.process_unread_emails()
+        log_execution("Processing email batch...")
+        processed_count, error_count, errors = await email_processor.process_email_batch(batch_size)
         
         log_execution(f"Email processing cycle completed. "
                      f"Processed: {processed_count}, "
                      f"Errors: {error_count}")
         
-        print(f"\nProcessed {processed_count} emails")
-        print(f"Encountered {error_count} errors")
-        print("Check the console output above for model responses.")
+        logger.info(f"\nProcessed {processed_count} emails")
+        logger.info(f"Encountered {error_count} errors")
+        logger.info("Check the log file for detailed model responses and processing information.")
         
         if errors:
             logger.warning("Errors encountered during processing:")
@@ -71,7 +69,36 @@ async def process_new_emails() -> bool:
         logger.error(f"Error during email processing: {str(e)}", exc_info=True)
         return False
 
+async def main():
+    retry_delay = 3  # seconds
+    max_retries = 1  # single retry attempt
+
+    for attempt in range(max_retries + 1):
+        if attempt > 0:
+            logger.info(f"Retry attempt {attempt} after {retry_delay} seconds delay")
+            await asyncio.sleep(retry_delay)
+
+        success = await process_email_batch()
+        if success:
+            break
+    
+    if not success:
+        logger.error("Email processing failed after all retry attempts")
+
+    # Perform maintenance tasks
+    await perform_maintenance()
+
+async def perform_maintenance():
+    """Perform maintenance tasks such as cleanup and key rotation"""
+    try:
+        secure_storage = SecureStorage()
+        key_rotated = await secure_storage.rotate_key()
+        records_cleaned = await secure_storage._cleanup_old_records()
+        logger.info(f"Maintenance tasks completed. Key rotated: {key_rotated}, Records cleaned: {records_cleaned}")
+    except Exception as e:
+        logger.error(f"Error during maintenance tasks: {str(e)}", exc_info=True)
+
 if __name__ == "__main__":
-    log_execution("Starting one-time email processing...")
-    asyncio.run(process_new_emails())
+    log_execution("Starting email processing...")
+    asyncio.run(main())
     log_execution("Processing complete")

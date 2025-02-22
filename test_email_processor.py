@@ -5,7 +5,7 @@ from email_processor import EmailProcessor
 from email_classifier import EmailTopic, EmailRouter
 from secure_storage import SecureStorageManager
 from deepseek_analyzer import DeepseekAnalyzer
-from llama_analyzer import LlamaAnalyzer
+from analyzers.llama_analyzer import LlamaAnalyzer
 
 class MockGmailClient:
     """Mock Gmail client for testing."""
