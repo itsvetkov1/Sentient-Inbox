@@ -6,15 +6,17 @@
 1. Email Processing Pipeline
    - GmailClient (gmail.py)
    - EmailProcessor (email_processor.py)
-   - EmailClassifier (email_classifier.py)
+   - ContentPreprocessor (content.py)
+   - EmailDateService (content.py)
    - LlamaAnalyzer (llama_analyzer.py)
    - DeepseekAnalyzer (deepseek_analyzer.py)
    - ResponseGenerator (email_writer.py)
 
-2. Three-Stage Analysis System
-   - Stage 1: Initial Meeting Classification (LlamaAnalyzer)
-   - Stage 2: Detailed Content Analysis (DeepseekAnalyzer)
-   - Stage 3: Final Decision Making (LlamaAnalyzer)
+2. Content Processing System
+   - HTML Cleaning (BeautifulSoup)
+   - Date Pattern Recognition
+   - Token Management
+   - Pattern Preservation
 
 3. Data Management
    - SecureStorage (secure_storage.py)
@@ -24,57 +26,68 @@
 
 ## Design Patterns
 
-### Singleton Pattern
-- Used in GroqClientWrapper
-- Manages single API client instance for Groq
-- Centralizes API key handling for Groq
+### Data Class Pattern
+- ProcessedContent for structured content results
+- AnalysisResult for model outputs
+- Type-safe access to analysis components
+- Comprehensive metadata tracking
 
-### Factory Pattern
-- Used for analyzer creation (LlamaAnalyzer and DeepseekAnalyzer)
-- Configurable analyzer selection based on analysis stage
+### Service Pattern
+- EmailDateService for date handling
+- ContentPreprocessor for content management
+- DateProcessor for pattern recognition
+- ContentChunker for token management
 
 ### Strategy Pattern
-- Implemented in email processing and response generation
-- Flexible analysis strategies for different email types
-- Configurable response templates
-
-### Observer Pattern
-- Email monitoring system
-- Event-driven processing
-- Asynchronous operations
+- Implemented in content preprocessing
+- Flexible date parsing strategies
+- Configurable pattern preservation
+- Token limit enforcement strategies
 
 ### Chain of Responsibility
-- Three-stage analysis pipeline
-- Each stage can process or pass to the next
+- Content preprocessing pipeline
+- Three-stage analysis system
+- Pattern preservation chain
+- Error handling chain
 
 ## Component Relationships
 
-### Email Processing Flow
+### Content Processing Flow
 ```
-Gmail API → GmailClient
+Raw Email Content
     ↓
-EmailProcessor → EmailClassifier
+HTML Cleaning (BeautifulSoup)
     ↓
-Stage 1: LlamaAnalyzer (Initial Classification)
+Date Extraction (RFC 2822/ISO 8601)
     ↓
-Stage 2: DeepseekAnalyzer (Detailed Analysis)
+Pattern Recognition & Preservation
     ↓
-Stage 3: LlamaAnalyzer (Final Decision)
+Token Management & Chunking
     ↓
-ResponseGenerator
-    ↓
-SecureStorage
+Processed Content
 ```
 
 ### Analysis Flow
 ```
 Unread Email
     ↓
+Content Preprocessing
+    - HTML Cleaning
+    - Date Extraction
+    - Pattern Preservation
+    - Token Management
+    ↓
 Stage 1: Initial Classification (LlamaAnalyzer)
+    - Content Chunking
+    - Classification Prompt
+    - Response Parsing
     ↓
 Meeting-related? → Yes → Stage 2: Detailed Analysis (DeepseekAnalyzer)
     ↓
 Stage 3: Final Decision (LlamaAnalyzer)
+    - Decision Prompt
+    - Response Validation
+    - Metadata Collection
     ↓
 Categorization (standard_response, needs_review, ignored)
     ↓
@@ -83,80 +96,102 @@ Processing Decision
 
 ## Technical Decisions
 
+### Content Processing
+- BeautifulSoup for robust HTML cleaning
+- RFC 2822 and ISO 8601 date parsing
+- Paragraph-based content chunking
+- Pattern-aware token management
+
 ### Error Handling
-- Single retry attempt with 3-second delay
-- Comprehensive DEBUG level logging
-- Metrics tracking
-- Graceful degradation
-- Robust API response validation
-- Detailed error logging for troubleshooting
+- Custom ContentProcessingError
+- Comprehensive error recovery
+- Detailed processing statistics
+- Pattern preservation validation
 
 ### Performance Optimization
-- Batch processing (100 emails per cycle)
-- Asynchronous processing
-- Weekly rolling history for efficient deduplication
-- Response time monitoring
-
-### Data Management
-- Structured JSON storage with confidence scores
-- Weekly rolling history for deduplication
-- Encrypted storage for processed emails and sensitive data
-- Robust backup and recovery mechanisms
+- Efficient HTML parsing
+- Smart content chunking
+- Pattern-based preservation
+- Token estimation optimization
 
 ### Security
-- OAuth2 authentication for Gmail integration
-- Environment-based configuration
-- API key protection
-- Secure storage with encryption
-- Regular security audits
+- HTML content sanitization
+- Pattern validation security
+- Error message safety
+- Processing metadata privacy
 
 ## Implementation Patterns
 
-### Batch Processing
+### Content Preprocessing
 ```python
-async def process_email_batch(batch_size: int = 100):
-    # Fetch → Deduplicate → Process → Store
+@dataclass
+class ProcessedContent:
+    content: str
+    metadata: Dict[str, any]
+    token_estimate: int
+    processing_stats: Dict[str, any]
+    extracted_dates: Set[str] = None
+
+class ContentPreprocessor:
+    def preprocess_content(self, content: str) -> ProcessedContent:
+        # Clean HTML → Extract Dates → Preserve Patterns → Manage Tokens
+        cleaned = self._clean_html(content)
+        dates = DateProcessor.extract_dates(cleaned)
+        preserved = self._extract_key_information(cleaned)
+        final = self._enforce_token_limit(preserved)
+        return ProcessedContent(...)
 ```
 
-### Three-Stage Analysis
+### Date Processing
 ```python
-async def analyze_email(email_content: str):
-    # Stage 1: Initial Classification
-    initial_classification = await llama_analyzer.classify(email_content)
+class EmailDateService:
+    @staticmethod
+    def parse_email_date(date_str: str) -> Tuple[datetime, bool]:
+        # Try RFC 2822 → ISO 8601 → Additional Formats
+        try:
+            email_tuple = email.utils.parsedate_tz(date_str)
+            if email_tuple:
+                return datetime.fromtimestamp(
+                    email.utils.mktime_tz(email_tuple),
+                    ZoneInfo("UTC")
+                ), True
+        except:
+            # Fallback strategies...
+            pass
+```
+
+### Content Chunking
+```python
+class ContentChunker:
+    def chunk_content(self, content: str) -> List[str]:
+        # Split content while preserving context
+        if len(content.split()) <= self.max_tokens:
+            return [content]
+            
+        chunks = []
+        for paragraph in content.split('\n\n'):
+            # Intelligent chunking with pattern preservation
+            if self._should_preserve(paragraph):
+                chunks.append(paragraph)
+```
+
+### Pattern Preservation
+```python
+def _extract_key_information(self, content: str) -> str:
+    # Keep content manageable while preserving patterns
+    paragraphs = content.split('\n\n')
+    selected = [paragraphs[0]]  # Keep first
     
-    if initial_classification == "meeting_related":
-        # Stage 2: Detailed Analysis
-        detailed_analysis = await deepseek_analyzer.analyze(email_content)
+    # Preserve important patterns
+    for paragraph in paragraphs[1:-1]:
+        if any(re.search(pattern, paragraph, re.IGNORECASE) 
+              for pattern in self.preserve_patterns):
+            selected.append(paragraph)
+            
+    if len(selected) < self.max_paragraphs:
+        selected.append(paragraphs[-1])  # Keep last
         
-        # Stage 3: Final Decision
-        final_decision = await llama_analyzer.make_decision(detailed_analysis)
-    else:
-        final_decision = initial_classification
-    
-    return final_decision
+    return '\n\n'.join(selected)
 ```
 
-### Response Generation
-```python
-def generate_response(email_category: str, parameters: dict):
-    if email_category == "standard_response":
-        return ResponseGenerator.generate_standard_response(parameters)
-    elif email_category == "needs_review":
-        return ResponseGenerator.flag_for_review(parameters)
-    else:
-        return None  # No response for ignored emails
-```
-
-### Secure Data Management
-```python
-class SecureStorage:
-    def store_processed_email(email_id: str, analysis_result: dict):
-        encrypted_data = self.encrypt(analysis_result)
-        self.db.store(email_id, encrypted_data)
-    
-    def retrieve_processed_email(email_id: str) -> dict:
-        encrypted_data = self.db.retrieve(email_id)
-        return self.decrypt(encrypted_data)
-```
-
-This architecture ensures reliable and secure email management through a sophisticated three-stage analysis pipeline, robust error handling, and efficient data management practices.
+This architecture ensures reliable and efficient email content processing through sophisticated preprocessing, robust error handling, and intelligent pattern preservation.

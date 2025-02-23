@@ -1,87 +1,87 @@
 # Active Context
 
 ## Current Focus
-- Debugging the project to ensure correct operation
-- Implementing the three-stage email analysis pipeline
-- Enhancing email classification and response management
-- Integrating Llama and Deepseek R1 models for comprehensive analysis
-- Improving secure storage and data management
+- Optimizing the three-stage email analysis pipeline
+- Enhancing content preprocessing and date handling
+- Improving token management and chunking strategies
+- Fine-tuning model prompts and response parsing
+- Implementing comprehensive error handling and logging
 
 ## Recent Changes
-- Introduced three-stage email analysis pipeline (Llama -> Deepseek R1 -> Llama)
-- Updated email processing workflow to incorporate new pipeline
-- Implemented weekly rolling history for deduplication
-- Enhanced error handling with single retry attempt and 3-second delay
-- Improved logging system to DEBUG level for comprehensive tracking
-- Implemented structured output handling for AI model responses
-- Updated configuration to use environment variables for API keys and sensitive data
-- Refactored main components to align with new architecture
+- Enhanced content chunking with paragraph-based preservation
+- Implemented robust date handling with RFC 2822 and ISO 8601 support
+- Added sophisticated token limit management
+- Enhanced prompt construction and response parsing
+- Improved error handling with detailed logging
+- Implemented structured data classes for analysis results
+- Added comprehensive metadata tracking
+- Enhanced pattern preservation system
 
 ## Active Decisions
 
 1. Email Processing
-   - Three-stage analysis system (Llama for initial classification and final decision, Deepseek R1 for detailed analysis)
-   - Batch processing of 100 emails per cycle
-   - Strict classification criteria for standard_response, needs_review, and ignored categories
-   - Enhanced parameter validation and handling
+   - Enhanced content preprocessing with BeautifulSoup
+   - Sophisticated date extraction and validation
+   - Intelligent content chunking with context preservation
+   - Advanced token management and pattern preservation
 
 2. System Architecture
-   - Microservice-ready component design
-   - Integration of multiple AI models (Llama and Deepseek R1)
-   - Comprehensive logging and error handling
-   - Preparation for future frontend integration
+   - Structured data classes for type safety
+   - Enhanced error handling with custom exceptions
+   - Comprehensive metadata tracking
+   - Modular preprocessing components
 
 3. Data Management
-   - Weekly rolling history implementation for deduplication
-   - Encrypted storage for processed emails and sensitive data
-   - Structured data storage with confidence scores
-   - Robust backup and recovery mechanisms
+   - Structured content processing results
+   - Enhanced date pattern storage
+   - Comprehensive processing statistics
+   - Pattern preservation tracking
 
 ## Next Steps
 
-1. Debugging and Optimization
-   - Identify and resolve issues preventing correct operation
-   - Optimize performance of the three-stage analysis pipeline
-   - Enhance error handling and recovery mechanisms
-   - Improve integration between Llama and Deepseek R1 models
+1. Performance Optimization
+   - Fine-tune content chunking parameters
+   - Optimize date pattern recognition
+   - Enhance token estimation accuracy
+   - Improve HTML cleaning efficiency
 
 2. Core Functionality Enhancement
-   - Implement agent coordination system
-   - Develop monitoring dashboard for system oversight
-   - Create agent configuration interface for easy adjustments
-   - Enhance response template system for more dynamic responses
+   - Expand date pattern recognition
+   - Improve pattern preservation logic
+   - Enhance metadata collection
+   - Refine content extraction strategies
 
 3. Testing and Validation
-   - Develop comprehensive unit tests for each stage of the analysis pipeline
-   - Create integration tests to verify end-to-end email processing
-   - Implement stress tests to ensure system stability under high load
-   - Validate logging and error reporting functionality across all components
+   - Add unit tests for date processing
+   - Validate content chunking accuracy
+   - Test pattern preservation edge cases
+   - Verify token limit enforcement
 
 4. Documentation and Standardization
-   - Update API documentation to reflect new system architecture
-   - Create detailed guides for system setup and configuration
-   - Document best practices for AI-powered email analysis and response generation
-   - Standardize error handling and logging practices across all components
+   - Document date processing patterns
+   - Update content preprocessing guidelines
+   - Create pattern preservation examples
+   - Document token management strategies
 
 ## Current Considerations
 
 ### Technical
-- Performance optimization of the three-stage analysis pipeline
-- Integration challenges between Llama and Deepseek R1 models
-- Scalability of the batch processing system
-- Implementation of robust error recovery mechanisms
-- Metrics collection and analysis for pipeline performance
+- Token estimation accuracy improvements
+- Date pattern recognition enhancements
+- HTML cleaning optimization
+- Pattern preservation refinements
+- Processing statistics analysis
 
 ### Functional
-- Accuracy of meeting detection and classification
-- Appropriateness of generated responses
-- Handling of complex email scenarios (attachments, multiple requests)
-- User experience for manual review process
+- Date extraction accuracy
+- Content preservation effectiveness
+- Token limit impact on content
+- Pattern matching reliability
 
 ### Security
-- Enhanced encryption for data at rest and in transit
-- Secure handling of API keys and sensitive configuration data
-- Implementation of strict access controls
-- Regular security audits and vulnerability assessments
+- HTML content sanitization
+- Pattern validation security
+- Error message safety
+- Processing metadata privacy
 
 This context guides our current development priorities and immediate next steps in debugging and enhancing the email management system.

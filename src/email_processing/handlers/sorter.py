@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, Optional
 
 from dotenv import load_dotenv
-from enhanced_groq_client import EnhancedGroqClient
+from integrations.groq.client_wrapper import EnhancedGroqClient
 
 # Set up logging to track what's happening in our application
 logging.basicConfig(

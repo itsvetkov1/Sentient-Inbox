@@ -5,59 +5,91 @@ An advanced automated email management system focused on meeting coordination th
 
 ## Core Architecture
 
-### Three-Stage Email Analysis Pipeline
-1. Initial Meeting Classification (Llama Model)
-   - Binary classification of emails (meeting-related or not)
-   - Processing of new, unhandled emails using unique identifiers
-   - Weekly rolling history maintenance for deduplication
+### Content Processing System
+1. HTML Content Processing
+   - BeautifulSoup-based HTML cleaning
+   - Content structure preservation
+   - Pattern recognition and preservation
+   - Token limit management
 
-2. Detailed Content Analysis (Deepseek R1 Model)
-   - Comprehensive content analysis for meeting-related emails
-   - Extraction of meeting parameters with confidence scores
-   - Assessment of email complexity and clarity
-   - Identification of missing or unclear information
+2. Date Processing System
+   - RFC 2822 and ISO 8601 support
+   - Multiple format recognition
+   - Timezone handling
+   - Fallback strategies
 
-3. Final Decision Making (Llama Model)
-   - Review of Deepseek analysis output
-   - Evaluation of confidence scores and identified complexities
-   - Final categorization: standard_response, needs_review, or ignored
+3. Three-Stage Email Analysis Pipeline
+   a. Initial Meeting Classification (Llama Model)
+      - Content chunking and preprocessing
+      - Binary classification of emails
+      - Processing of new, unhandled emails
+      - Weekly rolling history maintenance
 
-### Email Processing Rules
-- Required meeting details: Date, Time, Location
-- Standard response template with parameter insertion
-- Batch processing of 100 emails per cycle
-- Error handling with single retry attempt and 3-second delay
+   b. Detailed Content Analysis (Deepseek R1 Model)
+      - Pattern-aware content analysis
+      - Date extraction and validation
+      - Meeting parameter extraction
+      - Complexity assessment
+      - Missing information detection
+
+   c. Final Decision Making (Llama Model)
+      - Analysis consolidation
+      - Confidence evaluation
+      - Pattern verification
+      - Final categorization
+
+### Processing Rules
+- Content preprocessing before analysis
+- Pattern preservation during processing
+- Required meeting details validation
+- Date format standardization
+- Token limit enforcement
+- Batch processing optimization
+- Error handling with retries
 
 ## Technical Requirements
+- BeautifulSoup for HTML processing
+- RFC 2822 and ISO 8601 date handling
 - Groq API integration for AI processing
-- Gmail API integration with OAuth2 authentication
+- Gmail API integration with OAuth2
+- Pattern preservation system
+- Token management system
 - Secure storage with encryption
-- Comprehensive logging system (DEBUG level)
-- Robust error handling and recovery mechanisms
+- Comprehensive logging (DEBUG level)
+- Error handling and recovery
 
 ## Project Goals
-1. Implement core email processing pipeline
-2. Develop comprehensive logging system
-3. Create robust error handling mechanisms
-4. Design microservice-ready components
-5. Prepare for frontend integration
+1. Implement advanced content preprocessing
+2. Develop robust date handling system
+3. Optimize token management
+4. Enhance pattern preservation
+5. Implement core analysis pipeline
+6. Create comprehensive logging
+7. Design microservice components
 
 ## Current Status
-- Foundation for email processing pipeline implemented
-- Secure storage and Gmail integration in place
-- Initial AI model integration completed
+- Advanced content preprocessing implemented
+- Robust date handling system in place
+- Token management system operational
+- Pattern preservation working effectively
+- Three-stage pipeline functioning
+- Comprehensive logging active
 
 ## Next Steps (High Priority)
-1. Implement agent coordination system
-2. Develop monitoring dashboard
-3. Create agent configuration interface
-4. Enhance response template system
+1. Optimize content chunking
+2. Enhance date pattern recognition
+3. Improve token estimation
+4. Refine pattern preservation
+5. Develop monitoring system
 
 ## Future Enhancements
-- Auto-reminder system development
-- Calendar integration with conflict detection
-- Frontend customization options
-- Advanced PII detection and handling
-- Performance metrics expansion
+- Enhanced date parsing capabilities
+- Advanced pattern recognition
+- Improved token optimization
+- Calendar system integration
+- Auto-reminder development
+- Frontend customization
+- Advanced PII handling
+- Metrics expansion
 
 This system aims to provide a robust, scalable email management solution with advanced AI capabilities for efficient meeting coordination and response handling.

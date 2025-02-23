@@ -8,13 +8,14 @@ import asyncio
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-from email_classifier import EmailRouter, EmailTopic, EmailMetadata
-from processors.content_processor import ContentPreprocessor, EmailDateService
-from secure_storage import SecureStorage
-from gmail import GmailClient
-from analyzers.llama_analyzer import LlamaAnalyzer
-from deepseek_analyzer import DeepseekAnalyzer
-from email_writer import EmailAgent
+from email_processing.classification.classifier import EmailRouter, EmailTopic, EmailMetadata
+from email_processing.handlers.content import ContentPreprocessor
+from email_processing.handlers.date_service import EmailDateService
+from storage.secure import SecureStorage
+from integrations.gmail.client import GmailClient
+from email_processing.analyzers.llama import LlamaAnalyzer
+from email_processing.analyzers.deepseek import DeepseekAnalyzer
+from email_processing.handlers.writer import EmailAgent
 
 logger = logging.getLogger(__name__)
 

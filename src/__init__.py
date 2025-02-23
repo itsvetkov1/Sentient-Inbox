@@ -1,0 +1,3 @@
+"""
+Sentient-Inbox package
+"""

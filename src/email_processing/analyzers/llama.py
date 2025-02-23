@@ -22,8 +22,8 @@ import logging
 from typing import Dict, Tuple, Any, Optional, List
 import json
 from dataclasses import dataclass
-from email_classifier import EmailTopic
-from groq_integration.client_wrapper import EnhancedGroqClient
+from email_processing.classification.classifier import EmailTopic
+from integrations.groq.client_wrapper import EnhancedGroqClient
 from config.analyzer_config import ANALYZER_CONFIG
 
 logger = logging.getLogger(__name__)
@@ -56,14 +56,7 @@ class ContentChunker:
         self.max_tokens = max_tokens
         
     def chunk_content(self, content: str) -> List[str]:
-        """
-        Split content into processable chunks while preserving context.
-        
-        Implements:
-        - Intelligent paragraph boundary detection
-        - Context preservation across chunks
-        - Metadata extraction and retention
-        """
+        """Split content into processable chunks while preserving context."""
         # Rough token estimation (words as proxy)
         words = content.split()
         if len(words) <= self.max_tokens:
@@ -93,58 +86,189 @@ class ContentChunker:
         return chunks
 
 class LlamaAnalyzer:
-    """
-    AI-powered email analysis service using the llama-3.3-70b-versatile model.
-    
-    Implements comprehensive email analysis through:
-    - Initial classification (Stage 1)
-    - Detailed content analysis (used in Stage 2)
-    - Final decision making (Stage 3)
-    - Structured AI model interaction
-    - Robust response parsing and validation
-    - Detailed error handling and logging
-    """
+    """AI-powered email analysis service using the llama-3.3-70b-versatile model."""
     
     def __init__(self):
-        """
-        Initialize the analyzer with required components and configuration.
-        
-        Sets up:
-        - Model client configuration
-        - Content processing utilities
-        - Response parsing schemas
-        - Logging infrastructure
-        """
+        """Initialize the analyzer with required components."""
         self.client = EnhancedGroqClient()
         self.model_config = ANALYZER_CONFIG["default_analyzer"]["model"]
         self.content_chunker = ContentChunker(
             max_tokens=self.model_config.get("max_input_tokens", 4000)
         )
-        
-    async def classify_email(
+
+    def _construct_classification_prompt(
         self,
-        message_id: str,
         subject: str,
         content: str,
         sender: str,
-        email_type: EmailTopic,
-    ) -> Tuple[str, Dict]:
-        """
-        Perform initial classification of the email (Stage 1).
-        
-        Args:
-            message_id: Unique email identifier
-            subject: Email subject line
-            content: Email body content
-            sender: Email sender address
-            email_type: Classification of email type
+        email_type: EmailTopic
+    ) -> str:
+        """Construct prompt for initial email classification."""
+        return f"""Analyze this email to determine if it's meeting-related.
+
+Email Details:
+Subject: {subject}
+From: {sender}
+Content: {content}
+
+Consider:
+1. Explicit meeting mentions
+2. Scheduling language
+3. Time/date references
+4. Location references
+5. Coordination language
+
+Provide response in JSON format:
+{{
+    "classification": "meeting_related" or "not_meeting",
+    "confidence": float between 0 and 1,
+    "reasoning": "brief explanation",
+    "key_indicators": ["list", "of", "meeting", "related", "phrases"]
+}}"""
+
+    def _parse_classification_response(self, response: str) -> Dict[str, Any]:
+        """Parse and validate classification response."""
+        try:
+            # Validate response is not empty
+            if not response or not response.strip():
+                raise ValueError("Empty response from API")
+                
+            # Handle potential brotli/gzip encoding
+            if isinstance(response, bytes):
+                try:
+                    import brotli
+                    response = brotli.decompress(response).decode('utf-8')
+                except ImportError:
+                    response = response.decode('utf-8')
+                except Exception as e:
+                    logger.error(f"Failed to decompress response: {str(e)}")
+                    raise ValueError(f"Failed to decompress response: {str(e)}")
+
+            # Clean response string
+            response = response.strip()
+            if not response.startswith('{'):
+                # Extract JSON if wrapped in other content
+                import re
+                json_match = re.search(r'\{.*\}', response, re.DOTALL)
+                if json_match:
+                    response = json_match.group(0)
+                else:
+                    raise ValueError(f"No JSON object found in response: {response[:100]}...")
+
+            # Parse JSON
+            parsed = json.loads(response)
             
-        Returns:
-            Tuple containing (initial_classification, initial_analysis)
-        """
+            # Validate required fields
+            if "classification" not in parsed:
+                raise ValueError(f"Missing classification field in response: {response[:100]}...")
+            
+            # Normalize classification value
+            classification = parsed["classification"].lower()
+            if classification not in ["meeting_related", "not_meeting"]:
+                raise ValueError(f"Invalid classification value: {classification}")
+            
+            # Ensure all required fields with defaults
+            result = {
+                "classification": classification,
+                "confidence": float(parsed.get("confidence", 0.0)),
+                "reasoning": str(parsed.get("reasoning", "")),
+                "key_indicators": list(parsed.get("key_indicators", []))
+            }
+            
+            logger.debug(f"Successfully parsed classification response: {result}")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Classification response parsing failed: {str(e)}\nResponse: {response[:200]}...")
+            return {
+                "classification": "not_meeting",
+                "confidence": 0.0,
+                "reasoning": f"parsing failed: {str(e)}",
+                "key_indicators": []
+            }
+
+    def _construct_decision_prompt(
+        self,
+        initial_classification: str,
+        deepseek_decision: Optional[str],
+        analysis: Dict
+    ) -> str:
+        """Construct prompt for final decision making."""
+        return f"""Make a final decision about email handling based on multiple analyses.
+
+Initial Classification: {initial_classification}
+DeepSeek Decision: {deepseek_decision if deepseek_decision else 'Not Available'}
+
+Detailed Analysis:
+{json.dumps(analysis, indent=2)}
+
+Determine the final handling category:
+1. "standard_response": Clear meeting request, all details present
+2. "needs_review": Complex or unclear request, missing details
+3. "ignore": Not meeting related or no action needed
+
+Provide response in JSON format:
+{{
+    "decision": "standard_response" or "needs_review" or "ignore",
+    "confidence": float between 0 and 1,
+    "reasoning": "explanation of decision",
+    "requires_attention": boolean,
+    "missing_details": ["list", "of", "missing", "information"]
+}}"""
+
+    def _parse_decision_response(self, response: str) -> Dict[str, Any]:
+        """Parse and validate decision response."""
+        try:
+            parsed = json.loads(response)
+            
+            # Validate decision value
+            decision = parsed.get("decision", "needs_review").lower()
+            if decision not in ["standard_response", "needs_review", "ignore"]:
+                raise ValueError(f"Invalid decision value: {decision}")
+            
+            return {
+                "decision": decision,
+                "confidence": float(parsed.get("confidence", 0.0)),
+                "reasoning": str(parsed.get("reasoning", "")),
+                "requires_attention": bool(parsed.get("requires_attention", True)),
+                "missing_details": list(parsed.get("missing_details", []))
+            }
+            
+        except Exception as e:
+            logger.error(f"Decision response parsing failed: {str(e)}")
+            return {
+                "decision": "needs_review",
+                "confidence": 0.0,
+                "reasoning": "parsing failed",
+                "requires_attention": True,
+                "missing_details": []
+            }
+
+    async def classify_email(
+    self,
+    message_id: str,
+    subject: str,
+    content: str,
+    sender: str,
+    email_type: EmailTopic,
+) -> Tuple[str, Dict]:
+    # """
+    # Perform initial classification of the email (Stage 1) with enhanced error handling.
+    
+    # Args:
+    #     message_id: Unique email identifier
+    #     subject: Email subject line
+    #     content: Email body content
+    #     sender: Email sender address
+    #     email_type: Classification of email type
+        
+    # Returns:
+    #     Tuple containing (initial_classification, initial_analysis)
+    # """
         try:
             prompt = self._construct_classification_prompt(subject, content, sender, email_type)
             
+            # Process with Groq API
             response = await self.client.process_with_retry(
                 messages=[{"role": "user", "content": prompt}],
                 model=self.model_config["name"],
@@ -152,17 +276,22 @@ class LlamaAnalyzer:
                 max_completion_tokens=self.model_config["max_tokens"],
             )
             
-            classification_result = self._parse_classification_response(response.choices[0].message.content)
+            # Extract and process response content
+            response_content = self._process_groq_response(response)
+            classification_result = self._parse_classification_response(response_content)
             
             logger.info(f"Completed initial classification for {message_id}")
+            logger.debug(f"Classification result: {classification_result}")
             
             return classification_result["classification"], classification_result
             
         except Exception as e:
             logger.error(f"Error in initial classification for email {message_id}: {str(e)}", exc_info=True)
+            default_result = self._get_default_classification()
             return "needs_review", {
                 "error": str(e),
-                "processing_metadata": {"error_type": type(e).__name__}
+                "processing_metadata": {"error_type": type(e).__name__},
+                **default_result
             }
 
     async def analyze_email(
@@ -173,19 +302,7 @@ class LlamaAnalyzer:
         sender: str,
         email_type: EmailTopic,
     ) -> Dict:
-        """
-        Perform detailed content analysis of the email (used in Stage 2).
-        
-        Args:
-            message_id: Unique email identifier
-            subject: Email subject line
-            content: Email body content
-            sender: Email sender address
-            email_type: Classification of email type
-            
-        Returns:
-            Detailed analysis dictionary
-        """
+        """Perform detailed content analysis of the email (Stage 2)."""
         try:
             content_chunks = self.content_chunker.chunk_content(content)
             chunk_analyses = []
@@ -241,17 +358,7 @@ class LlamaAnalyzer:
         deepseek_decision: Optional[str],
         analysis: Dict
     ) -> Tuple[str, Dict]:
-        """
-        Make the final decision based on initial classification and detailed analysis (Stage 3).
-        
-        Args:
-            initial_classification: Result from the initial classification
-            deepseek_decision: Decision from DeepseekAnalyzer (if applicable)
-            analysis: Detailed analysis from Stage 2
-            
-        Returns:
-            Tuple containing (final_decision, final_analysis)
-        """
+        """Make final decision based on all analyses (Stage 3)."""
         try:
             prompt = self._construct_decision_prompt(initial_classification, deepseek_decision, analysis)
             
@@ -284,14 +391,7 @@ class LlamaAnalyzer:
         is_chunk: bool = False,
         chunk_index: int = 0
     ) -> str:
-        """
-        Construct optimized analysis prompt with comprehensive context.
-        
-        Implements:
-        - Context-aware prompt construction
-        - Chunk-aware analysis guidance
-        - Structured response formatting
-        """
+        """Construct optimized analysis prompt with comprehensive context."""
         chunk_context = ""
         if is_chunk:
             chunk_context = f"\nNote: This is part {chunk_index + 1} of a longer email. Please analyze this section independently."
@@ -330,15 +430,7 @@ class LlamaAnalyzer:
         """
 
     def _parse_response(self, response: str) -> Dict:
-        """
-        Parse and validate model response with comprehensive error handling.
-        
-        Implements:
-        - Strict JSON validation
-        - Schema conformance checking
-        - Default value handling
-        - Error recovery
-        """
+        """Parse and validate model response with comprehensive error handling."""
         try:
             # Attempt JSON parsing
             parsed = json.loads(response)
@@ -370,14 +462,7 @@ class LlamaAnalyzer:
             return {field: default for field, default in required_fields.items()}
             
     def _consolidate_analyses(self, analyses: List[Dict]) -> Dict:
-        """
-        Consolidate multiple chunk analyses into a coherent result.
-        
-        Implements:
-        - Intelligent result merging
-        - Duplicate removal
-        - Priority-based consolidation
-        """
+        """Consolidate multiple chunk analyses into a coherent result."""
         if not analyses:
             return {
                 "key_points": [],
@@ -412,21 +497,27 @@ class LlamaAnalyzer:
                     
         return consolidated
 
-    def _determine_recommendation(self, analysis: Dict) -> str:
-        """
-        Determine processing recommendation based on analysis results.
-        
-        Implementation:
-        - Evaluates content complexity
-        - Assesses urgency levels
-        - Considers action requirements
-        - Provides reasoned decision
-        """
-        # Check for critical indicators
-        has_action_items = bool(analysis.get("action_items"))
-        urgency = analysis.get("urgency", "").lower()
-        
-        if urgency == "high" or has_action_items:
-            return "needs_review"
-        
-        return "standard_response"
+    def _process_groq_response(self, response) -> str:
+        """Process and extract content from Groq API response."""
+        try:
+            if not response or not hasattr(response, 'choices') or not response.choices:
+                raise ValueError("Invalid response structure from Groq API")
+                
+            content = response.choices[0].message.content
+            if not content:
+                raise ValueError("Empty content in Groq API response")
+                
+            return content.strip()
+            
+        except Exception as e:
+            logger.error(f"Error processing Groq response: {str(e)}")
+            raise ValueError(f"Failed to process Groq response: {str(e)}")
+
+    def _get_default_classification(self) -> Dict[str, Any]:
+        """Get default classification result for error cases."""
+        return {
+            "classification": "needs_review",
+            "confidence": 0.0,
+            "reasoning": "error in classification",
+            "key_indicators": []
+        }

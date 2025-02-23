@@ -1,15 +1,19 @@
 import asyncio
 import logging
+import sys
 from datetime import datetime
 from pathlib import Path
 
-from gmail import GmailClient
-from email_processor import EmailProcessor
-from email_classifier import EmailTopic
-from email_writer import EmailAgent
-from analyzers.llama_analyzer import LlamaAnalyzer
-from deepseek_analyzer import DeepseekAnalyzer
-from secure_storage import SecureStorage
+# Add src directory to Python path
+sys.path.append(str(Path(__file__).parent / "src"))
+
+from integrations.gmail.client import GmailClient
+from email_processing.processor import EmailProcessor
+from email_processing.classification.classifier import EmailTopic
+from email_processing.handlers.writer import EmailAgent
+from email_processing.analyzers.llama import LlamaAnalyzer
+from email_processing.analyzers.deepseek import DeepseekAnalyzer
+from storage.secure import SecureStorage
 from dotenv import load_dotenv
 
 # Configure logging

@@ -6,8 +6,8 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 import asyncio
-from groq_integration.model_manager import ModelManager
-from groq_integration.client_wrapper import EnhancedGroqClient
+from integrations.groq.model_manager import ModelManager
+from integrations.groq.client_wrapper import EnhancedGroqClient
 
 logger = logging.getLogger(__name__)
 

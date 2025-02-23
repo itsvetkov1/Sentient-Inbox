@@ -7,17 +7,21 @@
 - Gmail API
 - Groq API (for Llama model integration)
 - Deepseek API (for Deepseek R1 model integration)
+- BeautifulSoup4 for HTML processing
 - JSON for structured data storage and communication
 
 ### Key Dependencies
 - groq-sdk: Groq API integration for Llama model
 - deepseek-sdk: Deepseek API integration for Deepseek R1 model
 - google-api-python-client: Gmail API access
+- beautifulsoup4: HTML content processing
 - python-dotenv: Environment management
 - typing-extensions: Type hints support
 - pathlib: Path manipulation
 - logging: Comprehensive DEBUG level logging
 - pydantic: Data validation and settings management
+- zoneinfo: Timezone handling for dates
+- email: RFC 2822 email parsing
 
 ## Development Setup
 
@@ -35,18 +39,22 @@ sentient-inbox/
 │   ├── cache/           # Weekly rolling history
 │   └── metrics/         # Performance metrics
 ├── docs/                # Documentation
-├── groq_integration/    # Llama model integration
-├── deepseek_integration/# Deepseek R1 model integration
-├── logs/                # System logs
-└── memory-bank/         # System memory
+├── src/
+│   ├── email_processing/
+│   │   ├── analyzers/   # Llama and Deepseek analyzers
+│   │   ├── handlers/    # Content and date processing
+│   │   └── classification/
+│   ├── integrations/    # API integrations
+│   └── utils/          # Shared utilities
+├── logs/               # System logs
+└── memory-bank/        # System memory
 ```
 
 3. File Organization:
    - main.py: Entry point
-   - email_processor.py: Three-stage email processing pipeline
-   - email_classifier.py: Initial classification (Llama)
+   - content.py: Content preprocessing and date handling
+   - llama_analyzer.py: Initial classification and final decision
    - deepseek_analyzer.py: Detailed content analysis
-   - llama_analyzer.py: Final decision making
    - email_writer.py: Response generation
    - secure_storage.py: Encrypted data management
 
@@ -58,8 +66,13 @@ sentient-inbox/
 - Gmail API quotas
 - Response time requirements
 - Token limits for model inputs
+- HTML parsing complexity
 
 ### Performance Requirements
+- Efficient HTML content cleaning
+- Accurate date pattern recognition
+- Smart content chunking and preservation
+- Token limit optimization
 - Batch processing of 100 emails per cycle
 - Efficient three-stage analysis pipeline
 - Quick response generation for standard responses
@@ -68,51 +81,68 @@ sentient-inbox/
 ### Security Requirements
 - OAuth2 authentication for Gmail integration
 - Secure API key storage for Groq and Deepseek
-- Encrypted storage for processed emails and sensitive data
-- Safe credential handling
-- Regular security audits
+- HTML content sanitization
+- Pattern validation security
+- Error message safety
+- Processing metadata privacy
+- Encrypted storage for processed emails
 
 ## Development Practices
 
 ### Code Standards
-- Type hints usage
+- Type hints with dataclasses
 - PEP 8 compliance
-- Async/await patterns for efficient processing
-- Comprehensive error handling with detailed logging
+- Async/await patterns
+- Comprehensive error handling
+- Pattern preservation practices
+- Token management strategies
 
 ### Logging System
 - DEBUG level logging for all operations
 - File-based logging with rotation
 - Structured log format for easy parsing
 - Comprehensive error and exception logging
+- Processing statistics tracking
+- Pattern preservation monitoring
 
 ### Error Handling
+- Custom ContentProcessingError
 - Single retry attempt with 3-second delay
-- Graceful degradation for persistent issues
-- Detailed error reporting for future frontend integration
-- No retries for content parsing failures
+- Graceful degradation for parsing failures
+- Pattern validation errors
+- Token limit violations
+- Date parsing fallbacks
+- HTML cleaning recovery
 
 ### Testing Requirements
-- Unit tests for each stage of the analysis pipeline
-- Integration testing for end-to-end email processing
-- Stress testing for system stability under high load
+- Unit tests for content processing
+- Date parsing validation tests
+- Pattern preservation verification
+- Token management testing
+- HTML cleaning validation
+- Integration testing for full pipeline
 - Error scenario coverage
-- Performance monitoring and optimization
+- Performance benchmarking
 
 ## Monitoring & Metrics
 
 ### Performance Tracking
-- Response times for each stage of the pipeline
-- Success rates for email classification and processing
-- Error frequency and types
-- API usage for Groq and Deepseek
-- Batch processing efficiency
+- HTML cleaning efficiency
+- Date extraction accuracy
+- Pattern preservation success
+- Token estimation accuracy
+- Content chunking effectiveness
+- Processing statistics analysis
+- Error frequency by type
+- API usage monitoring
 
 ### Data Management
-- Structured JSON storage with confidence scores
-- Weekly rolling history for efficient deduplication
-- Encrypted storage for processed emails and sensitive data
-- Robust backup and recovery mechanisms
-- Metrics collection for pipeline performance analysis
+- Structured content processing results
+- Enhanced date pattern storage
+- Pattern preservation tracking
+- Processing metadata collection
+- Token usage statistics
+- Error pattern analysis
+- Performance metrics collection
 
-This technical context ensures a robust, scalable, and secure implementation of the three-stage email analysis pipeline, integrating multiple AI models for comprehensive email processing.
+This technical context ensures robust and efficient email processing through sophisticated content handling, comprehensive error management, and detailed performance tracking.
