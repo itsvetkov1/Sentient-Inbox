@@ -43,12 +43,15 @@ async def process_email_batch(batch_size: int = 100) -> bool:
         llama_analyzer = LlamaAnalyzer()
         deepseek_analyzer = DeepseekAnalyzer()
         secure_storage = SecureStorage()
-        email_processor = EmailProcessor(gmail_client, llama_analyzer, deepseek_analyzer, secure_storage)
-        
-        email_processor.register_agent(EmailTopic.MEETING, meeting_agent)
+        processor = EmailProcessor(
+            gmail_client=gmail_client,
+            llama_analyzer=llama_analyzer,
+            deepseek_analyzer=deepseek_analyzer
+        )        
+        processor.register_agent(EmailTopic.MEETING, meeting_agent)
         
         log_execution("Processing email batch...")
-        processed_count, error_count, errors = await email_processor.process_email_batch(batch_size)
+        processed_count, error_count, errors = await processor.process_email_batch(batch_size)
         
         log_execution(f"Email processing cycle completed. "
                      f"Processed: {processed_count}, "
