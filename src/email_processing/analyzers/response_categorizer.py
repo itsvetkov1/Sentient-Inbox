@@ -1,177 +1,125 @@
 """
-Llama Response Categorizer for Email Classification
+ResponseCategorizer: Final Email Categorization Service
 
-This module implements the final categorization stage of the email analysis pipeline,
-taking detailed Deepseek analysis results and determining the appropriate handling
-category through structured decision making.
-
-Key Features:
-- Processes natural language analysis into structured decisions
-- Implements comprehensive categorization logic
-- Provides detailed reasoning for decisions
-- Maintains robust error handling
+Implements the final stage of the email analysis pipeline, determining
+appropriate handling categories based on Deepseek's detailed analysis
+and generating appropriate response templates.
 """
 
 import logging
-from typing import Dict, Tuple, Any, Optional
+import re
+from typing import Dict, Tuple, List, Optional
 from datetime import datetime
-from integrations.groq.client_wrapper import EnhancedGroqClient
+import json
+
+from integrations.groq import EnhancedGroqClient
 from config.analyzer_config import ANALYZER_CONFIG
 
 logger = logging.getLogger(__name__)
 
-class LlamaCategorizer:
+class ResponseCategorizer:
     """
-    Final-stage email categorizer using the Llama model.
+    Final stage analyzer for determining email handling categories and responses.
     
-    Processes detailed analysis results to make structured decisions
-    about email handling categories. Implements comprehensive decision
-    making with detailed reasoning and confidence scoring.
+    Uses Deepseek's analysis to make final categorization decisions and
+    generate appropriate response templates based on missing information
+    or required confirmations.
     """
     
     def __init__(self):
-        """
-        Initialize categorizer with required components.
-        
-        Sets up:
-        - Groq client for API interaction
-        - Model configuration
-        - Logging infrastructure
-        """
+        """Initialize categorizer with required components."""
         self.client = EnhancedGroqClient()
         self.model_config = ANALYZER_CONFIG["default_analyzer"]["model"]
         
     async def categorize_email(
         self,
-        initial_classification: str,
-        deepseek_analysis: Dict[str, Any]
-    ) -> Tuple[str, Dict[str, Any]]:
+        deepseek_summary: str,
+        deepseek_recommendation: str
+    ) -> Tuple[str, Optional[str]]:
         """
-        Determine final email category based on comprehensive analysis.
-        
-        Takes the initial classification and detailed Deepseek analysis
-        to make a final determination about email handling category.
+        Determine final handling category and generate response if needed.
         
         Args:
-            initial_classification: Result from initial classification
-            deepseek_analysis: Structured analysis from Deepseek
+            deepseek_summary: Detailed analysis from Deepseek
+            deepseek_recommendation: Recommended handling category
             
         Returns:
-            Tuple containing (category, detailed_result)
+            Tuple of (category: str, response_template: Optional[str])
         """
         try:
-            # Construct decision prompt
-            prompt = self._construct_decision_prompt(
-                initial_classification,
-                deepseek_analysis
-            )
+            logger.info(f"Processing categorization with recommendation: {deepseek_recommendation}")
             
-            # Process with Llama
+            if deepseek_recommendation == "standard_response":
+                # Extract missing information or generate confirmation
+                response_template = await self._generate_response_template(deepseek_summary)
+                return "standard_response", response_template
+                
+            elif deepseek_recommendation == "needs_review":
+                return "needs_review", None
+                
+            else:  # ignore
+                return "ignore", None
+                
+        except Exception as e:
+            logger.error(f"Categorization failed: {str(e)}")
+            return "needs_review", None
+
+    async def _generate_response_template(self, summary: str) -> str:
+        """
+        Generate appropriate response template based on Deepseek's analysis.
+        
+        Creates either an information request for missing details or a
+        meeting confirmation template based on the analysis content.
+        """
+        try:
+            # Analyze summary for missing information
+            prompt = self._construct_response_prompt(summary)
+            
             response = await self.client.process_with_retry(
-                messages=[{"role": "user", "content": prompt}],
+                messages=[
+                    {"role": "system", "content": "You are an email response generator. Create appropriate meeting-related responses."},
+                    {"role": "user", "content": prompt}
+                ],
                 model=self.model_config["name"],
-                temperature=self.model_config["temperature"],
-                max_completion_tokens=self.model_config["max_tokens"],
+                temperature=0.7
             )
             
-            # Parse and validate decision
-            decision_result = self._parse_decision_response(
-                response.choices[0].message.content
-            )
-            
-            logger.info("Successfully determined email category")
-            return decision_result["category"], decision_result
+            return response.choices[0].message.content.strip()
             
         except Exception as e:
-            logger.error(f"Error in categorization: {e}", exc_info=True)
-            return "needs_review", self._get_error_decision(str(e))
-            
-    def _construct_decision_prompt(
-        self,
-        initial_classification: str,
-        analysis: Dict[str, Any]
-    ) -> str:
+            logger.error(f"Response template generation failed: {e}")
+            return self._get_default_response_template()
+
+    def _construct_response_prompt(self, summary: str) -> str:
         """
-        Construct optimized decision prompt.
+        Construct prompt for response template generation.
         
-        Creates a carefully engineered prompt that encourages structured
-        decision making based on the provided analysis.
+        Creates a focused prompt that emphasizes identifying missing
+        information or generating appropriate confirmation messages.
         """
         return f"""
-        Determine the appropriate handling category for this email based on the following analysis:
+        Based on this meeting email analysis, generate an appropriate response:
 
-        Initial Classification: {initial_classification}
+        {summary}
 
-        Deepseek Analysis:
-        {self._format_analysis_sections(analysis)}
-
-        Categorize this email into one of these categories:
-        1. "standard_response": Clear meeting request with complete information
-        2. "needs_review": Complex request or missing critical information
-        3. "ignore": Not meeting related or no action needed
-
-        Provide your decision in this exact JSON format:
-        {{
-            "category": "standard_response" or "needs_review" or "ignore",
-            "confidence": float between 0 and 1,
-            "reasoning": "Detailed explanation of the decision",
-            "missing_information": ["list", "of", "missing", "details"] or [],
-            "key_factors": ["list", "of", "decision", "factors"]
-        }}
-        """
-            
-    def _format_analysis_sections(self, analysis: Dict[str, Any]) -> str:
-        """Format analysis sections for prompt inclusion."""
-        sections = analysis.get("sections", {})
-        return "\n\n".join([
-            f"Meeting Characteristics:\n{sections.get('characteristics', 'Not available')}",
-            f"Complexity Assessment:\n{sections.get('complexity', 'Not available')}",
-            f"Suggested Handling:\n{sections.get('handling', 'Not available')}",
-            f"Analysis Summary:\n{sections.get('summary', 'Not available')}"
-        ])
-            
-    def _parse_decision_response(self, response: str) -> Dict[str, Any]:
-        """
-        Parse and validate decision response.
+        If date, time, or location is missing:
+        - Create a polite request for the specific missing information
         
-        Implements comprehensive parsing with:
-        - JSON validation
-        - Schema enforcement
-        - Type checking
-        - Default value handling
+        If all meeting details are present:
+        - Create a confirmation message for meeting attendance
+        
+        Requirements:
+        - Keep the response professional but friendly
+        - Be specific about what information is missing
+        - For confirmations, reflect key meeting details
+        - Start with "Dear [Sender]" and end with "Best regards"
         """
-        try:
-            import json
-            result = json.loads(response)
-            
-            # Validate category
-            category = result.get("category", "needs_review").lower()
-            if category not in ["standard_response", "needs_review", "ignore"]:
-                logger.warning(f"Invalid category: {category}, defaulting to needs_review")
-                category = "needs_review"
-                
-            # Construct validated response
-            return {
-                "category": category,
-                "confidence": float(result.get("confidence", 0.0)),
-                "reasoning": str(result.get("reasoning", "")),
-                "missing_information": list(result.get("missing_information", [])),
-                "key_factors": list(result.get("key_factors", [])),
-                "timestamp": datetime.now().isoformat()
-            }
-            
-        except Exception as e:
-            logger.error(f"Error parsing decision response: {e}")
-            return self._get_error_decision(str(e))
-            
-    def _get_error_decision(self, error: str) -> Dict[str, Any]:
-        """Provide structured error response for failed decisions."""
-        return {
-            "category": "needs_review",
-            "confidence": 0.0,
-            "reasoning": f"Decision failed: {error}",
-            "missing_information": [],
-            "key_factors": [],
-            "timestamp": datetime.now().isoformat(),
-            "error": error
-        }
+
+    def _get_default_response_template(self) -> str:
+        """Provide a safe default response template for error cases."""
+        return """Dear [Sender],
+
+Thank you for your meeting request. To help me properly schedule our meeting, could you please provide additional details about the proposed meeting?
+
+Best regards,
+[Assistant]"""

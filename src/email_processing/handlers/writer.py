@@ -1,16 +1,17 @@
-from openai import OpenAI
-import json
 import base64
-import re
-import os
+import json
 import logging
-from email.mime.text import MIMEText
+import os
+import re
 from datetime import datetime
-from typing import Dict, Optional, List, Tuple
-from email_processing.classification.classifier import EmailMetadata
-from integrations.gmail.client import GmailClient
-from integrations.groq.client_wrapper import EnhancedGroqClient
+from email.mime.text import MIMEText
+from typing import Dict, List, Optional, Tuple
+
 from dotenv import load_dotenv
+from openai import OpenAI
+
+from email_processing import EmailMetadata
+from integrations import GmailClient, EnhancedGroqClient
 
 logger = logging.getLogger(__name__)
 load_dotenv(override=True)

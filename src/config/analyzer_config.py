@@ -1,4 +1,5 @@
 # config/analyzer_config.py
+
 ANALYZER_CONFIG = {
     "default_analyzer": {
         "model": {
@@ -39,7 +40,7 @@ ANALYZER_CONFIG = {
     "deepseek_analyzer": {
         "model": {
             "name": "deepseek-reasoner",
-            "temperature": 0.3,
+            "temperature": 0.7,
             "max_tokens": 5000,
             "api_endpoint": "https://api.deepseek.com/v1",
             "api_key": "${DEEPSEEK_API_KEY}"
@@ -52,7 +53,18 @@ ANALYZER_CONFIG = {
         },
         "analysis": {
             "confidence_threshold": 0.7,
-            "review_threshold": 0.5
-        }
+            "review_threshold": 0.5,
+            "system_prompt": "You are an AI specialized in analyzing meeting-related communications. Extract key information systematically and provide structured analysis."
+        },
+        # Simple numeric timeout in seconds - MUST BE A SINGLE INTEGER
+        "timeout": 180,  # 3 minutes total timeout
+        
+        # Retry configuration
+        "retry_count": 1,     # Number of retry attempts (1 retry = 2 total attempts)
+        "retry_delay": 3,     # Delay between retry attempts in seconds
+        
+        # Development fallback configuration
+        "use_fallback": False,           # Set to True to use mock responses during development
+        "use_fallback_on_error": True    # Use fallback analysis when API errors occur
     }
 }

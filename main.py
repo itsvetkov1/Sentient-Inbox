@@ -4,27 +4,51 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-# Add src directory to Python path
-sys.path.append(str(Path(__file__).parent / "src"))
-
-from integrations.gmail.client import GmailClient
-from email_processing.processor import EmailProcessor
-from email_processing.classification.classifier import EmailTopic
-from email_processing.handlers.writer import EmailAgent
-from email_processing.analyzers.llama import LlamaAnalyzer
-from email_processing.analyzers.deepseek import DeepseekAnalyzer
-from storage.secure import SecureStorage
 from dotenv import load_dotenv
 
-# Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/main.log'),
-        logging.StreamHandler()
-    ]
+sys.path.append(str(Path(__file__).parent / "src"))
+
+
+
+from src.email_processing import (
+    EmailProcessor, EmailTopic, EmailAgent, LlamaAnalyzer, 
+    DeepseekAnalyzer, ResponseCategorizer 
 )
+
+from src.integrations.gmail.client import GmailClient
+from src.storage.secure import SecureStorage
+
+def setup_logging():
+    """
+    Configure comprehensive logging with detailed formatting and appropriate levels.
+    
+    Implements hierarchical logging configuration to capture:
+    - Detailed API interaction logging
+    - Model inputs/outputs
+    - System state changes
+    - Performance metrics
+    """
+    # Create logs directory if it doesn't exist
+    Path('logs').mkdir(exist_ok=True)
+    
+    # Configure root logger
+    logging.basicConfig(
+        level=logging.DEBUG,  # Set to DEBUG to capture all levels
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler('logs/main.log'),
+            logging.StreamHandler()
+        ]
+    )
+    
+    # Set specific logger levels
+    logging.getLogger('src.email_processing.analyzers.llama').setLevel(logging.DEBUG)
+    logging.getLogger('src.email_processing.analyzers.deepseek').setLevel(logging.DEBUG)
+    logging.getLogger('src.email_processing.analyzers.response_categorizer').setLevel(logging.DEBUG)
+    logging.getLogger('httpx').setLevel(logging.DEBUG)  # For API calls
+
+setup_logging()
+
 logger = logging.getLogger(__name__)
 
 # Ensure logs directory exists
@@ -46,12 +70,14 @@ async def process_email_batch(batch_size: int = 100) -> bool:
         meeting_agent = EmailAgent()
         llama_analyzer = LlamaAnalyzer()
         deepseek_analyzer = DeepseekAnalyzer()
+        response_categorizer = ResponseCategorizer()
         secure_storage = SecureStorage()
         processor = EmailProcessor(
-            gmail_client=gmail_client,
-            llama_analyzer=llama_analyzer,
-            deepseek_analyzer=deepseek_analyzer
-        )        
+        gmail_client=gmail_client,
+        llama_analyzer=llama_analyzer,
+        deepseek_analyzer=deepseek_analyzer,
+        response_categorizer=response_categorizer
+    )
         processor.register_agent(EmailTopic.MEETING, meeting_agent)
         
         log_execution("Processing email batch...")
