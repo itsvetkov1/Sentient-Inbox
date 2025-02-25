@@ -169,34 +169,51 @@ class EmailProcessor:
             return False, error_msg
 
     async def _handle_categorized_email(
-        self,
-        message_id: str,
-        category: str,
-        response_template: Optional[str],
-        email_data: Dict
-    ) -> None:
-        """
-        Handle email based on its final categorization.
+    self,
+    message_id: str,
+    category: str,
+    response_template: Optional[str],
+    email_data: Dict
+        ) -> None:
         
-        Implements appropriate actions for each category:
-        - standard_response: Send response and mark as read
-        - needs_review: Keep unread for manual review
-        - ignore: Mark as read with no further action
-        
-        Args:
-            message_id: Unique identifier for the email
-            category: Final categorization result
-            response_template: Generated response text if applicable
-            email_data: Complete email data dictionary
-        """
+                # Handle email based on its final categorization.
+                
+                # Implements appropriate actions for each category:
+                # - standard_response: Generate response via EmailAgent and mark as read
+                # - needs_review: Keep unread for manual review
+                # - ignore: Mark as read with no further action
+                
+                # Args:
+                #     message_id: Unique identifier for the email
+                #     category: Final categorization result
+                #     response_template: Generated response text if applicable
+                #     email_data: Complete email data dictionary
+                # """
         try:
+            # Register with agent in case it isn't already
+            if EmailTopic.MEETING not in self.agents:
+                email_agent = EmailAgent()
+                self.register_agent(EmailTopic.MEETING, email_agent)
+            
+            email_agent = self.agents.get(EmailTopic.MEETING)
+            
             if category == "standard_response" and response_template:
-                # Send response email
-                success = self.gmail.send_email(
-                    to_email=email_data.get("sender", ""),
-                    subject=f"Re: {email_data.get('subject', 'Meeting Request')}",
-                    message_text=response_template
+                # Create email metadata for the agent
+                metadata = EmailMetadata(
+                    message_id=message_id,
+                    subject=email_data.get('subject', ''),
+                    sender=email_data.get('sender', ''),
+                    received_at=datetime.now(),
+                    topic=EmailTopic.MEETING,
+                    requires_response=True,
+                    raw_content=email_data.get('content', ''),
+                    analysis_data={
+                        'response_template': response_template
+                    }
                 )
+                
+                # Process with the email agent to send response
+                success = await email_agent.process_email(metadata)
                 
                 if success:
                     self.gmail.mark_as_read(message_id)

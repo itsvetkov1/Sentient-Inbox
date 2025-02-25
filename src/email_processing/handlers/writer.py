@@ -284,16 +284,35 @@ Ivaylo's AI Assistant"""
             return False
 
     async def process_email(self, metadata: EmailMetadata) -> bool:
-        """
-        Process an email and send appropriate response.
-        This method is called by the EmailProcessor.
-        """
+    # """
+    # Process an email and send appropriate response.
+    # This method is called by the EmailProcessor.
+    
+    # Implements comprehensive email processing with:
+    # - Duplicate detection
+    # - Response generation (or using provided template)
+    # - Email sending
+    # - Response logging
+    
+    # Args:
+    #     metadata: Comprehensive email metadata including analysis results
+        
+    # Returns:
+    #     bool: True if email successfully processed and responded to
+    # """
         try:
             if self.has_responded(metadata.message_id):
                 logger.info(f"Already responded to email {metadata.message_id}")
                 return True
 
-            response_text = await self.create_response(metadata)
+            # Check if a pre-generated response template is provided
+            if metadata.analysis_data and 'response_template' in metadata.analysis_data:
+                response_text = metadata.analysis_data['response_template']
+                logger.info(f"Using provided response template for {metadata.message_id}")
+            else:
+                # Generate response if not provided
+                response_text = await self.create_response(metadata)
+                
             if not response_text:
                 logger.error("Failed to create response")
                 return False

@@ -21,6 +21,7 @@ Integration Requirements:
 
 import base64
 import logging
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -28,6 +29,7 @@ from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from email.mime.text import MIMEText
 
 from .auth_manager import GmailAuthenticationManager
 
@@ -461,3 +463,92 @@ class GmailClient:
             True if operation successful, False otherwise
         """
         return self.modify_message_labels(message_id, add_labels=['UNREAD'])
+    
+    def send_email(self, to_email: str, subject: str, message_text: str) -> bool:
+        """
+        Send an email using Gmail API with comprehensive error handling.
+        
+        Implements secure email transmission with proper authentication management,
+        automatic token refresh, and detailed logging throughout the process.
+        
+        Args:
+            to_email: Recipient email address
+            subject: Email subject line
+            message_text: Plain text email body content
+            
+        Returns:
+            bool: True if sending successful, False otherwise
+        """
+        try:
+            # Create email MIME message
+            message = MIMEText(message_text)
+            message['to'] = to_email
+            message['subject'] = subject
+            
+            # Convert to raw format required by Gmail API
+            raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
+            
+            # Process with proper error handling for authentication issues
+            for attempt in range(self.retry_count + 1):
+                try:
+                    logger.info(f"Sending email to {self._mask_email(to_email)} with subject: {subject}")
+                    
+                    # Send the message using Gmail API
+                    result = self.service.users().messages().send(
+                        userId="me",
+                        body={'raw': raw_message}
+                    ).execute()
+                    
+                    message_id = result.get('id', '')
+                    logger.info(f"Email sent successfully, message_id: {message_id}")
+                    return True
+                    
+                except RefreshError:
+                    logger.warning("Authentication refresh required during email sending")
+                    if self.refresh_service():
+                        continue  # Retry with refreshed service
+                    return False
+                    
+                except Exception as e:
+                    if attempt < self.retry_count:
+                        logger.warning(f"Email sending attempt {attempt + 1} failed: {e}")
+                        time.sleep(2 ** attempt)  # Exponential backoff
+                        continue
+                        
+                    logger.error(f"Failed to send email after {self.retry_count + 1} attempts: {e}")
+                    return False
+                
+        except Exception as e:
+            logger.error(f"Error preparing email for sending: {e}")
+            return False
+            
+    def _mask_email(self, email: str) -> str:
+        """
+        Mask email addresses for privacy in logs.
+        
+        Implements privacy protection by masking parts of email addresses
+        while preserving enough information for debugging purposes.
+        
+        Args:
+            email: Email address to mask
+            
+        Returns:
+            Masked email address
+        """
+        if not email or '@' not in email:
+            return email
+            
+        try:
+            username, domain = email.split('@', 1)
+            if len(username) <= 2:
+                masked_username = '*' * len(username)
+            else:
+                masked_username = username[0] + '*' * (len(username) - 2) + username[-1]
+                
+            domain_parts = domain.split('.')
+            masked_domain = domain_parts[0][0] + '*' * (len(domain_parts[0]) - 1)
+            
+            return f"{masked_username}@{masked_domain}.{'.'.join(domain_parts[1:])}"
+        except Exception:
+            # If masking fails, return a generic masked value
+            return "***@***.***"
