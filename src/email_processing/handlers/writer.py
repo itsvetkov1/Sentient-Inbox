@@ -231,8 +231,13 @@ Thank you for your meeting request. To help me properly schedule our meeting, co
 
 Best regards,
 Ivaylo's AI Assistant"""
-
-            # If all parameters are present, verify confidence
+            parameter_names = {
+                "date": "the meeting date",
+                "time": "the meeting time",
+                "location": "the meeting location",
+                "agenda": "the meeting agenda/purpose"
+            }
+                        # If all parameters are present, verify confidence
             params = ai_analysis["parameters"]
             if ai_analysis["overall_confidence"] < 0.7:
                 # Ask for confirmation when confidence is low

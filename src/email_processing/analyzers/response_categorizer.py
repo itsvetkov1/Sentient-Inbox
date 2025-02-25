@@ -1,21 +1,23 @@
-# """
-# ResponseCategorizer: Final Email Categorization Service
+"""
+ResponseCategorizer: Final Email Categorization Service
 
-# Implements the final stage of the email analysis pipeline, determining
-# appropriate handling categories based on Deepseek's detailed analysis
-# and generating appropriate response templates.
+Implements the final stage of the email analysis pipeline, determining
+appropriate handling categories based on Deepseek's detailed analysis
+and generating appropriate response templates.
 
-# Design Considerations:
-# - Comprehensive parameter detection from natural language analysis
-# - Prioritization of standard responses for missing parameters
-# - Clear communication templates for parameter requests
-# - Robust error handling with fallback mechanisms
-# - Integration with response management specifications
-# """
+Design Considerations:
+- Integration with enhanced structured DeepseekAnalyzer output
+- Prioritization of pre-generated responses from structured analysis
+- Fallback to AI-generated responses when needed
+- Comprehensive parameter extraction from structured data
+- Robust error handling with detailed logging
+- Backward compatibility with previous pipeline versions
+"""
 
 import logging
 import re
-from typing import Dict, Tuple, List, Optional
+import traceback
+from typing import Dict, Tuple, List, Optional, Any
 from datetime import datetime
 import json
 
@@ -25,89 +27,189 @@ from config.analyzer_config import ANALYZER_CONFIG
 logger = logging.getLogger(__name__)
 
 class ResponseCategorizer:
-    # """
-    # Final stage analyzer for determining email handling categories and responses.
+    """
+    Final stage analyzer for determining email handling categories and responses.
     
-    # Uses Deepseek's analysis to make final categorization decisions and
-    # generate appropriate response templates based on missing information
-    # or required confirmations.
+    Implements the third stage of the three-stage email analysis pipeline, making
+    final determinations about email handling and response generation. This component
+    processes structured analysis data from DeepseekAnalyzer, extracts pre-generated
+    responses, and finalizes categorization decisions.
     
-    # Implements the third stage of the three-stage email analysis pipeline,
-    # making final determinations about email handling and response generation
-    # based on the detailed analysis provided by the Deepseek model.
-    # """
+    Key responsibilities:
+    - Process structured analysis data from DeepseekAnalyzer
+    - Prioritize pre-generated responses from structured output
+    - Generate responses when needed for missing parameters
+    - Make final categorization decisions for email handling
+    - Implement comprehensive logging and error handling
+    
+    The categorizer maintains backward compatibility with previous pipeline versions
+    while leveraging enhanced structured output from the updated DeepseekAnalyzer.
+    """
     
     def __init__(self):
-        """Initialize categorizer with required components."""
+        """
+        Initialize categorizer with required components.
+        
+        Sets up the GroqClient for fallback response generation and loads configuration
+        parameters from the centralized analyzer configuration.
+        """
         self.client = EnhancedGroqClient()
         self.model_config = ANALYZER_CONFIG["default_analyzer"]["model"]
         logger.debug(f"ResponseCategorizer initialized with model configuration: {self.model_config['name']}")
-        
+    
     async def categorize_email(
         self,
-        deepseek_summary: str,
-        deepseek_recommendation: str
+        analysis_data: Dict[str, Any],
+        response_text: str,
+        deepseek_recommendation: str,
+        deepseek_summary: Optional[str] = None
     ) -> Tuple[str, Optional[str]]:
         """
-        Determine final handling category and generate response if needed.
+        Determine final handling category and process or generate response.
         
-        Implements intelligent categorization based on Deepseek analysis:
-        - For emails with missing date/time/location, generates parameter request
-        - For complex emails, categorizes for manual review
-        - For irrelevant emails, categorizes for ignoring
+        Processes structured analysis data from DeepseekAnalyzer to make final
+        categorization decisions and handle response generation. Prioritizes
+        pre-generated responses when available and falls back to generating
+        responses when needed.
         
         Args:
-            deepseek_summary: Detailed analysis from Deepseek
-            deepseek_recommendation: Recommended handling category
+            analysis_data: Structured analysis data from DeepseekAnalyzer
+            response_text: Pre-generated response text from DeepseekAnalyzer
+            deepseek_recommendation: Recommended handling category from DeepseekAnalyzer
+            deepseek_summary: Optional legacy summary text for backward compatibility
             
         Returns:
             Tuple of (category: str, response_template: Optional[str])
         """
+        request_id = f"respond-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         try:
-            logger.info(f"Processing categorization with recommendation: {deepseek_recommendation}")
+            logger.info(f"[{request_id}] Processing categorization with recommendation: {deepseek_recommendation}")
+            logger.debug(f"[{request_id}] Analysis data: {json.dumps(analysis_data)}")
+            logger.debug(f"[{request_id}] Pre-generated response text length: {len(response_text)}")
             
-            # Check if missing parameters are mentioned in the summary
-            missing_params = self._extract_missing_parameters(deepseek_summary)
-            logger.debug(f"Extracted missing parameters: {missing_params}")
+            # Extract missing parameters from structured analysis when available
+            missing_params = self._extract_missing_parameters_structured(analysis_data)
             
-            # If there are missing parameters but they're requestable, prioritize standard_response
-            if missing_params and deepseek_recommendation != "ignore":
-                logger.info(f"Found missing parameters: {missing_params}, generating parameter request template")
-                response_template = await self._generate_parameter_request(deepseek_summary, missing_params)
-                return "standard_response", response_template
+            # Fall back to extracting from summary if needed
+            if not missing_params and deepseek_summary:
+                missing_params = self._extract_missing_parameters(deepseek_summary)
                 
-            if deepseek_recommendation == "standard_response":
-                # Extract missing information or generate confirmation
-                logger.info("Generating standard response template based on Deepseek recommendation")
-                response_template = await self._generate_response_template(deepseek_summary)
-                return "standard_response", response_template
-                
-            elif deepseek_recommendation == "needs_review":
-                logger.info("Categorizing email for manual review based on Deepseek recommendation")
-                return "needs_review", None
-                
-            else:  # ignore
-                logger.info("Categorizing email for ignoring based on Deepseek recommendation")
+            logger.debug(f"[{request_id}] Extracted missing parameters: {missing_params}")
+            
+            # Priority logic for categorization
+            if deepseek_recommendation == "ignore":
+                logger.info(f"[{request_id}] Categorizing email for ignoring based on DeepseekAnalyzer recommendation")
                 return "ignore", None
                 
-        except Exception as e:
-            logger.error(f"Categorization failed: {str(e)}")
+            # For meeting emails requiring review
+            if deepseek_recommendation == "needs_review":
+                logger.info(f"[{request_id}] Categorizing email for manual review based on DeepseekAnalyzer recommendation")
+                return "needs_review", None
+                
+            # For standard responses
+            if deepseek_recommendation == "standard_response":
+                # Use pre-generated response if available
+                if response_text:
+                    logger.info(f"[{request_id}] Using pre-generated response from DeepseekAnalyzer")
+                    return "standard_response", response_text
+                
+                # Handle missing parameters even if recommendation is standard_response
+                if missing_params:
+                    logger.info(f"[{request_id}] Found missing parameters: {missing_params}, generating parameter request")
+                    response_template = await self._generate_parameter_request(
+                        analysis_data, 
+                        missing_params, 
+                        deepseek_summary
+                    )
+                    return "standard_response", response_template
+                
+                # Fallback to generating response template
+                logger.info(f"[{request_id}] Generating standard response template")
+                response_template = await self._generate_response_template(analysis_data, deepseek_summary)
+                return "standard_response", response_template
+                
+            # Default handling - treat as needs_review for safety
+            logger.warning(f"[{request_id}] Unrecognized recommendation: {deepseek_recommendation}, treating as needs_review")
             return "needs_review", None
-        
-            
-    def _extract_missing_parameters(self, summary: str) -> List[str]:
+                
+        except Exception as e:
+            # Comprehensive error logging with stack trace
+            logger.error(f"[{request_id}] Categorization failed: {str(e)}")
+            logger.error(f"[{request_id}] Stack trace: {traceback.format_exc()}")
+            return "needs_review", None
+    
+    def _extract_missing_parameters_structured(self, analysis_data: Dict[str, Any]) -> List[str]:
         """
-        Extract missing parameters from Deepseek summary.
+        Extract missing parameters from structured analysis data.
         
-        Analyzes the summary to identify parameters that can be requested
-        from the sender, such as date, time, location, or agenda.
+        Processes structured analysis data to identify missing parameters that 
+        can be requested from the sender. Handles various formats of structured
+        data to ensure consistent parameter extraction.
         
         Args:
-            summary: Detailed summary from Deepseek analysis
+            analysis_data: Structured analysis data from DeepseekAnalyzer
             
         Returns:
             List of missing parameter names
         """
+        missing_params = []
+        
+        # Check for direct missing_elements field in structured data
+        if "missing_elements" in analysis_data:
+            missing_elements = analysis_data["missing_elements"]
+            
+            # Convert to lowercase for case-insensitive matching
+            missing_elements_lower = missing_elements.lower()
+            
+            # Map missing elements to parameter names
+            param_patterns = {
+                "date": ["date", "day", "when"],
+                "time": ["time", "hour", "when"],
+                "location": ["location", "place", "where", "venue", "meeting link", "zoom"],
+                "agenda": ["agenda", "purpose", "topic", "objective"]
+            }
+            
+            # Extract missing parameters based on patterns
+            for param, patterns in param_patterns.items():
+                if any(pattern in missing_elements_lower for pattern in patterns):
+                    missing_params.append(param)
+                    
+        # Check for completeness score to infer missing elements
+        elif "completeness" in analysis_data:
+            try:
+                # Extract completeness value and convert to int
+                completeness_str = analysis_data["completeness"]
+                if "/" in completeness_str:
+                    completeness = int(completeness_str.split("/")[0])
+                else:
+                    completeness = int(completeness_str)
+                    
+                # If completeness is less than total, infer missing elements
+                if completeness < 4:  # We expect 4 total parameters
+                    # Default to requesting the most critical params if we can't determine specifics
+                    missing_params = ["date", "time", "location"]
+            except (ValueError, TypeError):
+                logger.warning(f"Invalid completeness value in analysis_data: {analysis_data.get('completeness')}")
+        
+        return missing_params
+            
+    def _extract_missing_parameters(self, summary: str) -> List[str]:
+        """
+        Extract missing parameters from text summary (legacy method).
+        
+        Analyzes the summary text to identify parameters that can be requested
+        from the sender, such as date, time, location, or agenda. Used as a
+        fallback when structured data is unavailable.
+        
+        Args:
+            summary: Detailed summary from DeepseekAnalyzer
+            
+        Returns:
+            List of missing parameter names
+        """
+        if not summary:
+            return []
+            
         missing_params = []
         
         # Common patterns for missing parameter detection
@@ -126,43 +228,69 @@ class ResponseCategorizer:
                 
         return missing_params
 
-    async def _generate_response_template(self, summary: str) -> str:
+    async def _generate_response_template(self, analysis_data: Dict[str, Any], summary: Optional[str] = None) -> str:
         """
-        Generate appropriate response template based on Deepseek's analysis.
+        Generate appropriate response template based on analysis data and summary.
         
-        Creates either an information request for missing details or a
-        meeting confirmation template based on the analysis content.
+        Creates either an information request for missing details or a meeting
+        confirmation template based on available analysis data. Uses either
+        structured data or text summary depending on availability.
         
         Args:
-            summary: Detailed analysis from Deepseek
+            analysis_data: Structured analysis data from DeepseekAnalyzer
+            summary: Optional text summary for backward compatibility
             
         Returns:
             Formatted response template
         """
         try:
-            # Analyze summary for missing information
-            prompt = self._construct_response_prompt(summary)
+            # Extract sender name for personalization
+            sender_name = analysis_data.get("sender_name", self._extract_sender_name(summary))
             
-            logger.debug(f"Sending response generation prompt to model: {len(prompt)} characters")
-            response = await self.client.process_with_retry(
-                messages=[
-                    {"role": "system", "content": "You are an email response generator. Create appropriate meeting-related responses."},
-                    {"role": "user", "content": prompt}
-                ],
-                model=self.model_config["name"],
-                temperature=0.7
-            )
+            # Determine tone for response
+            tone = analysis_data.get("tone", "formal").lower()
             
-            response_content = response.choices[0].message.content.strip()
-            logger.debug(f"Generated response template of length: {len(response_content)}")
-            return response_content
+            # Check if missing elements are specified
+            missing_elements = analysis_data.get("missing_elements")
+            
+            # Generate appropriate greeting based on tone
+            greeting = self._generate_greeting(sender_name, tone)
+            
+            # Generate response body based on available data
+            if missing_elements:
+                # Generate request for missing information
+                body = (
+                    f"Thank you for your meeting request. To help me properly schedule our meeting, "
+                    f"could you please provide the following information: {missing_elements}?"
+                )
+            else:
+                # Generate confirmation response
+                body = (
+                    "Thank you for your meeting request. I am reviewing the details "
+                    "and will confirm our meeting arrangements shortly."
+                )
+            
+            # Generate appropriate closing based on tone
+            closing = "Thanks!" if tone == "friendly" else "Best regards,"
+            signature = "Ivaylo's AI Assistant"
+            
+            # Assemble complete response
+            response = f"{greeting}\n\n{body}\n\n{closing}\n{signature}"
+            
+            logger.debug(f"Generated response template of length: {len(response)}")
+            return response
             
         except Exception as e:
-            logger.error(f"Response template generation failed: {e}")
+            logger.error(f"Response template generation failed: {str(e)}")
+            logger.error(f"Stack trace: {traceback.format_exc()}")
             return self._get_default_response_template()
-        
 
-    async def _generate_parameter_request(self, summary: str, missing_params: List[str]) -> str:
+    async def _generate_parameter_request(
+        self, 
+        analysis_data: Dict[str, Any], 
+        missing_params: List[str],
+        summary: Optional[str] = None
+    ) -> str:
         """
         Generate a response requesting missing parameters.
         
@@ -170,19 +298,22 @@ class ResponseCategorizer:
         missing information needed to process the meeting.
         
         Args:
-            summary: Detailed summary from Deepseek
+            analysis_data: Structured analysis data from DeepseekAnalyzer
             missing_params: List of parameters to request
+            summary: Optional text summary for backward compatibility
             
         Returns:
             Formatted response template requesting information
         """
+        # Parameter descriptions for user-friendly requests
         param_descriptions = {
             "date": "the meeting date",
             "time": "the specific time (including AM/PM)",
-            "location": "the exact meeting location",
+            "location": "the exact meeting location or virtual meeting link",
             "agenda": "the meeting purpose or agenda"
         }
         
+        # Format parameters for natural language inclusion
         formatted_params = [param_descriptions[param] for param in missing_params if param in param_descriptions]
         
         if len(formatted_params) == 1:
@@ -192,50 +323,79 @@ class ResponseCategorizer:
         else:
             param_text = ", ".join(formatted_params[:-1]) + f", and {formatted_params[-1]}"
         
-        # Extract sender name using regex
-        sender_match = re.search(r"sender: ([^,\n]+)", summary)
-        sender_name = sender_match.group(1) if sender_match else "[Sender]"
+        # Extract sender name from analysis data or summary
+        sender_name = analysis_data.get("sender_name", self._extract_sender_name(summary))
         
-        response_template = f"""Dear {sender_name},
+        # Determine tone for response
+        tone = analysis_data.get("tone", "formal").lower()
+        
+        # Generate greeting based on tone and sender information
+        greeting = self._generate_greeting(sender_name, tone)
+        
+        # Generate appropriate closing based on tone
+        closing = "Thanks!" if tone == "friendly" else "Best regards,"
+        
+        # Create complete response
+        response_template = f"""{greeting}
 
 Thank you for your meeting request. To help me properly schedule our meeting, could you please provide {param_text}?
 
-Best regards,
+{closing}
 Ivaylo's AI Assistant"""
 
         logger.debug(f"Generated parameter request for: {missing_params}")
         return response_template
 
-    def _construct_response_prompt(self, summary: str) -> str:
+    def _generate_greeting(self, sender_name: Optional[str], tone: str) -> str:
         """
-        Construct prompt for response template generation.
+        Generate appropriate greeting based on sender name and tone.
         
-        Creates a focused prompt that emphasizes identifying missing
-        information or generating appropriate confirmation messages.
+        Creates a personalized greeting that matches the specified tone
+        and includes the sender's name when available.
         
         Args:
-            summary: Detailed analysis from Deepseek
+            sender_name: Sender's name for personalization, if available
+            tone: Communication tone (friendly or formal)
             
         Returns:
-            Structured prompt for response generation
+            Formatted greeting
         """
-        return f"""
-        Based on this meeting email analysis, generate an appropriate response:
-
-        {summary}
-
-        If date, time, or location is missing:
-        - Create a polite request for the specific missing information
+        sender_name = sender_name or "[Sender]"
         
-        If all meeting details are present:
-        - Create a confirmation message for meeting attendance
-        
-        Requirements:
-        - Keep the response professional but friendly
-        - Be specific about what information is missing
-        - For confirmations, reflect key meeting details
-        - Start with "Dear [Sender]" and end with "Best regards"
+        if tone == "friendly":
+            return f"Hi {sender_name},"
+        else:
+            return f"Dear {sender_name},"
+
+    def _extract_sender_name(self, summary: Optional[str]) -> Optional[str]:
         """
+        Extract sender name from summary text.
+        
+        Attempts to identify sender information from text summary
+        for personalization in responses.
+        
+        Args:
+            summary: Text summary that might contain sender information
+            
+        Returns:
+            Sender name if found, None otherwise
+        """
+        if not summary:
+            return None
+            
+        # Look for common sender information patterns
+        patterns = [
+            r"sender(?:'s)?\s*(?:name|is)?:\s*([^,\n]+)",
+            r"from\s*:\s*([^,\n]+)",
+            r"email from\s+([^,\n.]+)"
+        ]
+        
+        for pattern in patterns:
+            match = re.search(pattern, summary, re.IGNORECASE)
+            if match:
+                return match.group(1).strip()
+                
+        return None
 
     def _get_default_response_template(self) -> str:
         """
@@ -247,9 +407,39 @@ Ivaylo's AI Assistant"""
         Returns:
             Default response template
         """
-        return """Dear [Sender],
+        return """Dear Sender,
 
 Thank you for your meeting request. To help me properly schedule our meeting, could you please provide additional details about the proposed meeting?
 
 Best regards,
 Ivaylo's AI Assistant"""
+
+    # Legacy method signature for backward compatibility
+    async def categorize_email_legacy(
+        self,
+        deepseek_summary: str,
+        deepseek_recommendation: str
+    ) -> Tuple[str, Optional[str]]:
+        """
+        Legacy method signature for backward compatibility.
+        
+        Implements the previous interface for categorizing emails
+        to maintain compatibility with older code.
+        
+        Args:
+            deepseek_summary: Detailed analysis from DeepseekAnalyzer
+            deepseek_recommendation: Recommended handling category
+            
+        Returns:
+            Tuple of (category: str, response_template: Optional[str])
+        """
+        # Extract minimal analysis data from summary
+        analysis_data = {}
+        
+        # Call the new implementation with empty structured data
+        return await self.categorize_email(
+            analysis_data=analysis_data,
+            response_text="",
+            deepseek_recommendation=deepseek_recommendation,
+            deepseek_summary=deepseek_summary
+        )

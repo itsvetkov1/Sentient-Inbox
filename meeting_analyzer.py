@@ -1,7 +1,7 @@
 import logging
 from typing import Tuple, Dict, Optional
 from email.message import Message
-from deepseek import DeepseekAnalyzer
+from src.email_processing.analyzers import DeepseekAnalyzer
 
 logger = logging.getLogger(__name__)
 

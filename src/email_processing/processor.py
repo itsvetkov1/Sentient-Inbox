@@ -20,6 +20,7 @@ from .analyzers.deepseek import DeepseekAnalyzer
 from .analyzers.response_categorizer import ResponseCategorizer
 from integrations import GmailClient
 from storage import SecureStorage
+from .handlers.writer import EmailAgent
 
 logger = logging.getLogger(__name__)
 
