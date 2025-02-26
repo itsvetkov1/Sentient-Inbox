@@ -6,64 +6,57 @@ This document outlines the three primary classification categories used in the e
 ## Standard Response Category
 
 ### Definition and Purpose
-The "standard_response" classification indicates emails that can be handled automatically through the system's response mechanism. These are straightforward meeting requests that contain all necessary information and require no additional human intervention.
+The "standard_response" classification indicates emails that can be handled automatically through the system's response mechanism. These emails have sufficient information for the system to generate appropriate responses without human intervention.
 
 ### Qualification Requirements
-For an email to qualify for standard response handling, it must meet all of the following criteria:
-- Contains a clear, single meeting request
-- Includes all mandatory parameters:
-  - Date (clearly specified)
-  - Time (explicitly stated)
-  - Location (physical or virtual meeting space)
-- Contains no attachments
-- Presents no ambiguity in the request
-- Includes no additional complex information
-- Features no multiple meeting options or alternatives
+For an email to qualify for standard response handling, it typically meets the following criteria:
+- Contains clear meeting-related content
+- Provides sufficient information for appropriate response generation
+- Presents minimal complexity or risk factors
+- Has clear parameters if it's a meeting request
+- Contains no complex attachments requiring review
 
 ### Processing Actions
 When an email is classified for standard response, the system performs these actions:
-- Generates an automatic response using the template system
-- Inserts validated parameters into the response template
+- Sends the pre-generated response from DeepseekAnalyzer
 - Stars the email for future reference
 - Marks the email as read after successful response
 - Records the processing in the weekly history
 
-### Parameter Handling
-The system manages parameters through this process:
-- Validates each required parameter independently
-- Confirms parameter completeness before response
-- Requests missing parameters if needed
-- Awaits completion of all parameters before final confirmation
+### Response Types
+The system may generate various types of standard responses:
+- Confirmation for complete meeting requests
+- Information requests for meetings with missing details
+- Acknowledgments for informational emails
+- Clarification requests for ambiguous content
 
 ## Needs Review Category
 
 ### Definition and Purpose
-The "needs_review" classification indicates emails that require human attention due to complexity, missing information, or special circumstances that prevent automated handling.
+The "needs_review" classification indicates emails that require human attention due to complexity, sensitive content, or other factors that prevent automated handling. This category ensures human oversight for appropriate situations but it's with low priority and only when unavoidable.
 
 ### Triggering Conditions
-An email is classified for review under any of these conditions:
-- Presence of attachments (regardless of content)
-- Multiple meeting requests in single email
-- Complex additional information beyond meeting details
-- Missing or unclear mandatory parameters
-- Ambiguous meeting details requiring clarification
-- Combined meeting content with other important information
-- Multiple participants with different scheduling requirements
-- Complex scheduling patterns or recurring meeting requests
+An email is classified for review under these conditions:
+- High-risk content identified during analysis
+- Complex scenarios beyond automated handling capabilities
+- Multi-party coordination requirements
+- Financial or legal implications detected
+- Complex attachments requiring human assessment
 
 ### Processing Actions
 For emails requiring review, the system:
 - Maintains unread status
-- Applies star marking
+- Applies star marking for visibility and priority
 - Preserves all attachments and original formatting
-- Does not generate automated responses
+- May generate a notification of pending review
 - Records the classification in processing history
 
 ### Special Handling Requirements
-The system implements specific handling for:
-- Emails with attachments receive immediate "needs_review" status
-- Multiple request emails are automatically flagged for review
-- Complex content triggers review classification regardless of parameter completeness
+The system implements specific handling for review cases:
+- Gmail starring provides visual indication for priority attention
+- Star marking ensures easy filtering and identification
+- Preservation of unread status maintains visibility in inbox
+- Response generation may include pending review notification
 
 ## Ignore Category
 
@@ -79,8 +72,7 @@ Emails are classified for ignoring when:
 
 ### Processing Actions
 For ignored emails, the system:
-- Maintains current unread status
-- Applies no star marking
+- Maintains current status
 - Performs no response generation
 - Records the classification in processing history
 - Takes no further action
@@ -92,40 +84,58 @@ Before finalizing ignore classification:
 - Ensures no critical information is overlooked
 - Records classification reasoning
 
-## Special Case Handling
+## Response Generation Guidelines
 
-### Complex Content Management
-For emails containing multiple types of content:
-- Meeting content with other important information triggers review
-- Multiple meeting options require review classification
-- Complex scheduling patterns need human attention
+### Standard Response Generation
+The system generates responses based on the email content and analysis results:
 
-### Attachment Processing
-The system implements strict handling for attachments:
-- Any email with attachments receives review classification
-- No automated responses for attachment-containing emails
-- Attachment presence is logged and tracked
+```
+Response Logic Matrix:
+┌───────────────────────┬──────────────────────────────┐
+│ Scenario              │ Action                       │
+├───────────────────────┼──────────────────────────────┤
+│ Complete + Low Risk   → Instant confirmation         │
+│ Missing 1-3 Elements → Request specific missing data │
+│ High Risk Content    → 24h human review notice       │
+│ Info Only            → Polite acknowledgment        │
+└───────────────────────┴──────────────────────────────┘
+```
 
-### Multiple Request Processing
-When multiple requests are detected:
-- Automatic review classification is applied
-- Original formatting and content are preserved
-- All request details are maintained for review
+### Tone Adaptation
+Responses are dynamically adapted to match the sender's communication style:
 
-## Classification Logging and Tracking
+| Scenario          | Friendly Response                          | Formal Response                              |
+|-------------------|--------------------------------------------|----------------------------------------------|
+| Needs Review      | "Hey Sam! We'll get back within 24h 😊"    | "Dear Ms. Smith: Your request is under review..." |
+| Missing Info      | "Hi! Could you share the time? 🕒"         | "Please provide meeting time at your earliest..." |
 
-### Record Keeping
-The system maintains comprehensive logs including:
-- Classification decisions and reasoning
-- Processing actions taken
-- Parameter validation results
-- Special condition triggers
+### Response Priority
+The system prioritizes sending appropriate responses whenever possible. The DeepseekAnalyzer actively attempts to avoid "needs_review" status, ensuring senders receive timely responses in most scenarios.
 
-### Status Tracking
-For each processed email, the system tracks:
-- Final classification category
-- Applied status changes (read/unread)
-- Star marking status
-- Processing completion status
+## Classification Process Flow
 
-This classification system ensures appropriate handling of all incoming emails while maintaining efficient processing and organization. Each category has specific criteria and actions that work together to provide comprehensive email management.
+### Initial Stage (LlamaAnalyzer)
+- Performs binary classification (meeting-related or not)
+- Non-meeting emails typically proceed to ignored category
+- Meeting-related emails proceed to detailed analysis
+
+### Detailed Analysis Stage (DeepseekAnalyzer)
+- Performs comprehensive content analysis
+- Generates appropriate response when possible
+- Identifies potential review requirements
+- Provides structured output for categorization
+
+### Final Categorization Stage (ResponseCategorizer)
+- Processes structured analysis output
+- Makes final categorization decisions
+- Prepares responses for delivery
+- Determines email handling requirements
+
+### Delivery Stage (EmailAgent)
+- Implements appropriate handling based on category
+- Sends responses for standard_response emails
+- Sets correct email status in Gmail
+- Stars emails requiring review
+- Maintains comprehensive response logs
+
+This classification system ensures appropriate handling of all incoming emails while maintaining efficient processing and organization. Each category has specific criteria and actions that work together to provide comprehensive email management with appropriate human oversight when needed.

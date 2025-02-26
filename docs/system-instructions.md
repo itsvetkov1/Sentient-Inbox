@@ -1,61 +1,57 @@
 # Email Management System Development Instructions
 
 ## System Overview and Purpose
-This automated email management system focuses on meeting coordination through Gmail integration. The system leverages a sophisticated AI-powered architecture using Groq, with specialized components designed for efficient email processing and response handling. The foundation includes secure storage encryption and Gmail integration with OAuth2 authentication.
+This automated email management system focuses on meeting coordination through Gmail integration. The system leverages a sophisticated AI-powered architecture using Groq and Deepseek, with specialized components designed for efficient email processing and response handling. The foundation includes secure storage encryption and Gmail integration with OAuth2 authentication.
 
 ## Core Architecture Implementation Flow
-The system processes emails through a sophisticated three-stage analysis pipeline, utilizing both Llama and Deepseek models for comprehensive email understanding and decision-making.
+The system processes emails through a sophisticated four-stage pipeline, utilizing specialized models and components for comprehensive email understanding, response generation, and delivery.
 
-### Stage 1: Initial Meeting Classification (Llama)
+### Stage 1: Initial Meeting Classification (LlamaAnalyzer)
 The first stage employs a Llama model to perform preliminary email classification with these key functions:
 - Analysis of incoming email content to determine meeting-related information
 - Binary classification (meeting-related or not)
 - Processing of only new, unhandled emails using unique identifiers
 - Maintenance of a weekly rolling history of processed email IDs for deduplication
 
-### Stage 2: Detailed Content Analysis (Deepseek)
-When an email is classified as meeting-related, the Deepseek R1 model performs a comprehensive content analysis that generates:
+### Stage 2: Detailed Content Analysis and Response Generation (DeepseekAnalyzer)
+When an email is classified as meeting-related, the Deepseek R1 model performs comprehensive content analysis and generates appropriate responses:
 
-Detailed Analysis Output:
-- A natural language summary of the email's key points
-- Extracted meeting parameters with confidence scores
-- Assessment of email complexity and clarity
-- Identification of any missing or unclear information
-- Reasoning about the email's context and requirements
+**Core Workflow:**
+1. **Email Ingestion & Initial Processing**
+   - Generates unique request ID using content hash + timestamp
+   - Performs content length validation and sanitization
+   - Creates structured analysis prompt with comprehensive instructions
 
-This analysis is structured to include:
-- Primary meeting details (date, time, location) with confidence scores
-- Secondary information (agenda, participants, prerequisites)
-- Potential complexities or ambiguities that need attention
-- Initial recommendation based on completeness of information
+2. **Comprehensive Content Analysis**
+   - Initial screening for meeting content and tone
+   - Completeness check for required elements (time/date, location, agenda, attendees)
+   - Risk assessment for sensitive content and complexity
 
-### Stage 3: Final Decision Making (Llama)
-The Llama model performs a critical final analysis by:
-- Ingesting the complete Deepseek analysis output
-- Reviewing the reasoning and extracted information
-- Evaluating confidence scores and identified complexities
-- Making a final categorization decision
+3. **Dynamic Response Generation**
+   - Generates appropriate responses based on analysis results
+   - Adapts tone to match sender's communication style
+   - Provides specific responses for different scenarios:
+     - Complete + Low Risk → Instant confirmation
+     - Missing Elements → Request for specific missing data
+     - High Risk Content → Human review notification
+     - Info Only → Polite acknowledgment
 
-The model assigns one of three final statuses:
+> The DeepseekAnalyzer actively attempts to avoid "needs_review" status whenever possible, ensuring senders receive appropriate responses in most scenarios.
 
-1. "standard_response":
-   - All required meeting details present with high confidence
-   - No complex requirements or ambiguities identified
-   - Clear, single-purpose meeting request
-   - Will be marked with a star after automated response
-   - Uses customizable response templates
+### Stage 3: Response Categorization (ResponseCategorizer)
+The Response Categorizer processes Deepseek's analysis to finalize the handling category and prepare responses:
+- Processes structured output from DeepseekAnalyzer
+- Extracts and validates pre-generated response text
+- Makes final categorization decisions (standard_response, needs_review, ignored)
+- Prepares response for delivery
 
-2. "needs_review":
-   - Complex meetings with multiple components
-   - Presence of attachments requiring review
-   - Unclear or incomplete critical information
-   - Low confidence scores in key parameters
-   - Will be left unread and starred
-
-3. "ignored":
-   - Confirmed non-meeting emails
-   - No action required based on content
-   - Remains unread, no further processing
+### Stage 4: Response Delivery (EmailAgent)
+The Email Agent handles the final delivery and status management:
+- Sends responses for standard_response emails
+- Updates email status in Gmail based on categorization
+- Marks needs_review emails with a star for visibility
+- Maintains comprehensive response logs
+- Records all communications for future reference
 
 ## Email Processing Rules and Requirements
 
@@ -64,6 +60,7 @@ Standard response processing requires:
 - Date (with validated format)
 - Time (with clear specification)
 - Location (physical or virtual meeting space)
+- Agenda (purpose of the meeting)
 
 ### Standard Response Template
 Template structure with parameter insertion:
@@ -111,11 +108,11 @@ Template structure with parameter insertion:
 
 ## Development Guidelines
 Development priorities should focus on:
-1. Core email processing pipeline implementation
-2. Comprehensive logging system
-3. Robust error handling mechanisms
-4. Microservice-ready component design
-5. Frontend integration preparation
+1. Maintaining the integrity of the four-stage pipeline
+2. Ensuring proper integration between all components
+3. Implementing robust error handling throughout the pipeline
+4. Supporting the dynamic response generation capabilities
+5. Enhancing Gmail status management for better visibility
 
 The system should be developed with consideration for:
 - Future distributed system architecture
@@ -124,4 +121,4 @@ The system should be developed with consideration for:
 - Scalability and maintenance
 - Security and data protection
 
-This architecture ensures a robust, scalable system that can evolve while maintaining reliable email processing capabilities.
+This architecture ensures a robust, scalable system that provides timely responses to meeting-related emails while maintaining reliable processing capabilities and appropriate human oversight when needed.

@@ -3,13 +3,47 @@
 ## Introduction
 This document details the comprehensive set of rules and mechanisms governing email processing within the system. These specifications ensure consistent handling of emails across the pipeline while maintaining efficiency and reliability.
 
+## Processing Pipeline Overview
+
+### Four-Stage Processing Pipeline
+The system implements a sophisticated four-stage processing pipeline:
+
+1. **Initial Classification (LlamaAnalyzer)**
+   - Binary classification of emails (meeting-related or not)
+   - Initial filtering to optimize processing resources
+   - Processing of only unique, unhandled emails
+
+2. **Content Analysis & Response Generation (DeepseekAnalyzer)**
+   - Comprehensive content analysis of meeting-related emails
+   - Required elements verification (time/date, location, agenda, attendees)
+   - Risk assessment for complex or sensitive content
+   - Dynamic response generation based on analysis results
+   - Tone adaptation to match sender's communication style
+
+3. **Response Categorization (ResponseCategorizer)**
+   - Processing of Deepseek analysis output
+   - Extraction and validation of pre-generated responses
+   - Final categorization decision-making
+   - Preparation of responses for delivery
+
+4. **Response Delivery (EmailAgent)**
+   - Sending of appropriate responses to senders
+   - Email status management in Gmail
+   - Special handling for needs_review emails (starred in Gmail)
+   - Comprehensive response logging
+
 ## Batch Processing Specifications
 
 ### Batch Size Management
 The system processes emails in controlled batches to optimize resource utilization and maintain system stability. Each processing cycle handles up to 100 emails, ensuring efficient throughput while preventing system overload. This batch size was chosen to balance processing efficiency with system responsiveness.
 
 ### Processing Sequence
-Emails are processed in chronological order within each batch. The system maintains strict processing order to ensure no emails are inadvertently skipped or processed out of sequence. Each email in the batch undergoes the complete three-stage analysis pipeline before the system moves to the next email.
+Emails are processed in chronological order within each batch. The system maintains strict processing order to ensure no emails are inadvertently skipped or processed out of sequence. Each email undergoes the complete four-stage pipeline:
+
+1. LlamaAnalyzer determines if the email is meeting-related
+2. If meeting-related, DeepseekAnalyzer performs content analysis and generates appropriate response
+3. ResponseCategorizer finalizes the categorization and prepares response
+4. EmailAgent handles delivery and status management
 
 ## Email History Tracking
 
@@ -33,43 +67,46 @@ Before initiating the analysis pipeline for any email, the system performs a tho
 ## Required Meeting Parameters
 
 ### Mandatory Fields
-Three specific parameters are required for standard response processing:
-- Date of the meeting
-- Time of the meeting
+Four specific parameters are required for optimal processing:
+- Date of the meeting (specific day)
+- Time of the meeting (specific hour)
 - Location (physical or virtual)
+- Agenda (purpose of the meeting)
 
 ### Parameter Validation
 Each required parameter undergoes validation to ensure completeness and accuracy:
 - Date must be in a recognized format
 - Time must be clearly specified
 - Location must be explicitly stated
+- Agenda must provide sufficient context
 
-## Parameter Verification Workflow
+## Response Generation Rules
 
-### Missing Parameter Detection
-The system implements a thorough verification process for all required parameters:
-- Each parameter is checked for presence and validity
-- Missing parameters are explicitly identified
-- Unclear or ambiguous parameters are flagged for attention
+### Dynamic Response Generation
+The DeepseekAnalyzer implements a sophisticated response generation system:
 
-### Response Generation
-When parameters are missing, the system follows a specific workflow:
-1. Identifies specific missing parameters
-2. Generates a request for the missing information
-3. Awaits response before proceeding with meeting confirmation
-4. Validates complete information before sending confirmation
+```
+Response Logic Matrix:
+┌───────────────────────┬──────────────────────────────┐
+│ Scenario              │ Action                       │
+├───────────────────────┼──────────────────────────────┤
+│ Complete + Low Risk   → Instant confirmation         │
+│ Missing 1-3 Elements → Request specific missing data │
+│ High Risk Content    → 24h human review notice       │
+│ Info Only            → Polite acknowledgment        │
+└───────────────────────┴──────────────────────────────┘
+```
 
-## Response Template System
+### Tone Adaptation
+Responses are dynamically adapted to match the sender's communication style:
 
-### Template Structure
-The system uses a standardized template for responses:
-"Thank you for your meeting request. I am pleased to confirm our meeting on {params['date']['value']} at {params['time']['value']} at {params['location']['value']}"
+| Scenario          | Friendly Response                          | Formal Response                              |
+|-------------------|--------------------------------------------|----------------------------------------------|
+| Needs Review      | "Hey Sam! We'll get back within 24h 😊"    | "Dear Ms. Smith: Your request is under review..." |
+| Missing Info      | "Hi! Could you share the time? 🕒"         | "Please provide meeting time at your earliest..." |
 
-### Parameter Insertion
-The template system includes:
-- Dynamic parameter insertion
-- Validation of parameter values before insertion
-- Proper formatting of inserted values
+### Response Priority
+The system prioritizes sending appropriate responses whenever possible. The DeepseekAnalyzer actively attempts to avoid "needs_review" status, ensuring senders receive timely responses in most scenarios.
 
 ## Email Status Management
 
@@ -81,9 +118,9 @@ The system maintains precise control over email status:
 
 ### Starring System
 The system implements specific starring rules:
-- All meeting emails receiving standard automated responses are starred
-- All emails classified for review are starred
-- Ignored emails remain unstarred
+- All emails classified for review are starred for visibility and priority handling
+- This provides a visual indicator for emails requiring human attention
+- Starred emails can be easily filtered and identified in Gmail
 
 ## Data Integrity and Validation
 
@@ -103,15 +140,15 @@ The system verifies all processing outputs:
 
 ### Attachment Handling
 Emails containing attachments receive special processing:
-- Meeting-related emails with attachments are automatically classified for review
-- No automatic responses are generated for emails with attachments
+- Meeting-related emails with attachments are assessed for risk
+- Complex attachments may trigger needs_review classification
 - Attachment presence is logged for tracking purposes
 
 ### Multiple Request Handling
 When multiple requests are detected:
-- Email is automatically flagged for review
-- No automated response is generated
-- Original email remains unread and starred
+- The system attempts to generate appropriate responses when possible
+- Complex multiple requests may trigger needs_review classification
+- Original email remains unread and starred if human review is needed
 
 ## System Monitoring and Logging
 
@@ -121,6 +158,7 @@ The system maintains detailed logs at DEBUG level, with particular emphasis on:
 - Parameter validation results
 - Status change operations
 - Template processing results
+- Gmail status management operations
 
 ### Error Tracking
 Comprehensive error logging includes:
@@ -128,5 +166,6 @@ Comprehensive error logging includes:
 - Processing exceptions
 - Status update errors
 - Template processing issues
+- Response delivery failures
 
-This specification ensures consistent and reliable email processing while maintaining system efficiency and accuracy. Each rule and mechanism works in concert to provide a robust email management solution.
+This specification ensures consistent and reliable email processing while maintaining system efficiency and accuracy. Each rule and mechanism works in concert to provide a robust email management solution with appropriate responses to senders and efficient handling of complex scenarios.

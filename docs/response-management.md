@@ -3,22 +3,45 @@
 ## Introduction
 The response management system handles all aspects of email response generation and delivery within the email management system. It ensures consistent, appropriate, and accurate responses to meeting-related emails while maintaining professional communication standards and proper parameter handling.
 
-## Standard Response Template System
+## Response Generation System
 
-### Primary Response Template
-The system employs a standardized template structure for meeting confirmations:
+### Dynamic Response Generation
+The system employs a sophisticated response generation approach implemented in the DeepseekAnalyzer:
 
-"Thank you for your meeting request. I am pleased to confirm our meeting on {params['date']['value']} at {params['time']['value']} at {params['location']['value']}"
+```
+Response Logic Matrix:
+┌───────────────────────┬──────────────────────────────┐
+│ Scenario              │ Action                       │
+├───────────────────────┼──────────────────────────────┤
+│ Complete + Low Risk   → Instant confirmation         │
+│ Missing 1-3 Elements → Request specific missing data │
+│ High Risk Content    → 24h human review notice       │
+│ Info Only            → Polite acknowledgment        │
+└───────────────────────┴──────────────────────────────┘
+```
 
-This template serves as the foundation for all standard responses until the frontend customization feature is implemented.
+### Tone Adaptation
+Responses are dynamically adapted to match the sender's communication style:
 
-### Template Variables
-The system processes three mandatory parameters:
-- Date: Meeting date in standardized format
-- Time: Meeting time in clear specification
-- Location: Physical or virtual meeting space
+| Scenario          | Friendly Response                          | Formal Response                              |
+|-------------------|--------------------------------------------|----------------------------------------------|
+| Needs Review      | "Hey Sam! We'll get back within 24h 😊"    | "Dear Ms. Smith: Your request is under review..." |
+| Missing Info      | "Hi! Could you share the time? 🕒"         | "Please provide meeting time at your earliest..." |
 
-Each parameter must be properly validated and formatted before insertion into the template.
+### Response Templates
+The system maintains various response templates for different scenarios:
+
+1. **Meeting Confirmation Template:**
+   "Thank you for your meeting request. I am pleased to confirm our meeting on {params['date']['value']} at {params['time']['value']} at {params['location']['value']}"
+
+2. **Information Request Template:**
+   "Thank you for your meeting request. To help me properly schedule our meeting, could you please provide {missing_info}?"
+
+3. **Review Notification Template:**
+   "Thank you for your meeting request. Your request requires additional review, and we will respond within 24 hours."
+
+4. **Acknowledgment Template:**
+   "Thank you for the information about the meeting. I have noted the details."
 
 ## Parameter Processing Workflow
 
@@ -35,6 +58,7 @@ Validation Rules:
 - Date must be clearly specified and valid
 - Time must be explicitly stated and unambiguous
 - Location must be definitively provided
+- Agenda must be sufficiently detailed
 
 ### Missing Parameter Handling
 When parameters are incomplete, the system follows a structured workflow:
@@ -58,54 +82,60 @@ The system maintains parameter integrity through:
 
 ## Response Generation Process
 
-### Response Assembly
-The system follows a systematic approach to response generation:
+### Analysis-Based Generation
+The system generates responses based on comprehensive analysis:
 
-Preparation Phase:
-- Parameter validation confirmation
-- Template selection
-- Context verification
-- Status checking
+1. **Content Analysis**
+   - Meeting request detection
+   - Parameter extraction and validation
+   - Tone identification
+   - Completeness assessment
+   - Risk evaluation
 
-Assembly Process:
-- Parameter formatting
-- Template population
-- Content validation
-- Final formatting
+2. **Response Selection**
+   - Template selection based on analysis results
+   - Parameter incorporation
+   - Tone adjustment
+   - Personalization elements
 
-### Quality Assurance
-Before sending any response, the system performs:
-- Complete response validation
-- Parameter insertion verification
-- Format checking
-- Content completeness verification
+3. **Final Formatting**
+   - Proper greeting based on sender name and tone
+   - Response body with appropriate information
+   - Consistent closing
+   - Professional signature
 
-## Confirmation Workflow
+### Response Priority
+The system prioritizes sending appropriate responses whenever possible. The DeepseekAnalyzer actively attempts to avoid "needs_review" status, ensuring senders receive timely responses in most scenarios.
 
-### Initial Response
-For emails requiring standard responses, the system:
-- Confirms parameter completeness
-- Validates response generation
-- Prepares email for sending
-- Updates email status
+## Response Delivery Workflow
 
-### Parameter Completion
-The system manages parameter completion through:
-- Tracking of received parameters
-- Validation of new information
-- Update of response status
-- Progress monitoring
+### Delivery Process
+The EmailAgent handles the delivery of all responses:
 
-## Status Management
+Preparation Stage:
+- Response validation
+- Sender information verification
+- Subject line formatting
+- Content finalization
 
-### Email Status Handling
-The system maintains precise control over email status throughout the response process:
+Delivery Stage:
+- Email transmission through Gmail API
+- Status update in Gmail
+- Delivery confirmation
+- Response logging
+
+### Email Status Management
+The system implements comprehensive status management:
 
 Status Updates:
-- Marks emails as read after successful response
-- Stars emails receiving standard responses
-- Maintains unread status for review cases
-- Tracks response delivery status
+- Standard Response: Marked as read after response
+- Needs Review: Maintained as unread and starred
+- Ignored: Status unchanged, no action taken
+
+Starring System:
+- Special visual indication for needs_review emails
+- Priority handling facilitation
+- Easy filtering in Gmail interface
 
 ### Record Keeping
 The system maintains comprehensive records of:
@@ -113,38 +143,58 @@ The system maintains comprehensive records of:
 - Parameter validation states
 - Status change history
 - Delivery confirmations
+- Response content
 
 ## Special Cases Management
 
 ### Attachment Handling
 For emails containing attachments:
-- Automatically routes to review
-- Preserves attachment context
-- Maintains original formatting
-- Prevents automated responses
+- Content analysis includes attachment assessment
+- Complex attachments may trigger needs_review categorization
+- Attachment information is preserved for human review
+- Response content acknowledges attachments when appropriate
 
-### Multiple Request Processing
-When multiple requests are detected:
-- Routes to manual review
-- Preserves all request details
-- Maintains original context
-- Prevents automated responses
+### Complex Request Processing
+When multiple or complex requests are detected:
+- The system attempts to generate appropriate responses when possible
+- Highly complex requests may trigger needs_review categorization
+- Response content acknowledges complexity when appropriate
+- Preservation of context for human review
 
-## Future Enhancements Preparation
+## Integration and Flow
 
-### Template Customization
-The system is designed to support future template customization through:
-- Flexible template structure
-- Variable parameter handling
-- Format adaptability
-- Style customization support
+### Pipeline Integration
+The response management system integrates with the four-stage pipeline:
 
-### Frontend Integration
-The response system prepares for frontend integration by:
-- Maintaining structured data formats
-- Supporting template modification
-- Enabling parameter customization
-- Providing status monitoring capabilities
+1. **LlamaAnalyzer Stage**
+   - Initial classification of meeting-related content
+   - Binary determination of processing need
+
+2. **DeepseekAnalyzer Stage**
+   - Comprehensive content analysis
+   - Dynamic response generation
+   - Parameter extraction and validation
+   - Response template selection
+   - Trying to answer for scenarios out of template scopes with appropriate answer
+
+3. **ResponseCategorizer Stage**
+   - Processing of analysis output
+   - Response preparation and finalization
+   - Category determination
+   - Delivery preparation
+
+4. **EmailAgent Stage**
+   - Response delivery
+   - Status management in Gmail
+   - Special handling for needs_review (starring)
+   - Record keeping and logging
+
+### Information Flow
+The system maintains proper information flow throughout the process:
+
+1. Email content → Analysis → Response generation → Delivery
+2. Parameters → Validation → Template incorporation → Final response
+3. Analysis results → Categorization → Status management → Record keeping
 
 ## Error Handling and Recovery
 
@@ -178,4 +228,4 @@ Continuous quality monitoring includes:
 - Format consistency monitoring
 - Delivery success confirmation
 
-This specification ensures consistent and reliable response management while maintaining system efficiency and accuracy. Each component works together to provide professional and accurate email responses while preparing for future enhancements and customization capabilities.
+This specification ensures consistent and reliable response management while maintaining system efficiency and accuracy. Each component works together to provide professional and appropriate email responses while preparing for future enhancements and customization capabilities.
