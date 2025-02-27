@@ -234,6 +234,16 @@
       "timestamp": "2025-02-25T23:44:18.630384",
       "duration": 6.836013,
       "status": "success"
+    },
+    {
+      "timestamp": "2025-02-26T21:31:03.000515",
+      "duration": 0.423852,
+      "status": "success"
+    },
+    {
+      "timestamp": "2025-02-26T23:00:06.070440",
+      "duration": 0.504853,
+      "status": "success"
     }
   ],
   "errors": [
@@ -335,8 +345,8 @@
     }
   ],
   "performance": {
-    "avg_response_time": 0.6585329574468083,
-    "total_requests": 47,
-    "success_rate": 48.93617021276596
+    "avg_response_time": 0.6506072244897957,
+    "total_requests": 49,
+    "success_rate": 51.02040816326531
   }
 }

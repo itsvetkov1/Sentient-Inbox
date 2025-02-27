@@ -129,7 +129,7 @@ class EmailProcessor:
                 return True, None
                 
             # Stage 2: Detailed Analysis with DeepseekAnalyzer
-            summary, recommendation, deepseek_error = await self.deepseek_analyzer.analyze_email(
+            analysis_data, response_text, recommendation, deepseek_error = await self.deepseek_analyzer.analyze_email(
                 email_content=email.get("processed_content", "")
             )
             
@@ -139,14 +139,17 @@ class EmailProcessor:
                 
             # Stage 3: Final Categorization and Response Generation
             category, response_template = await self.response_categorizer.categorize_email(
-                deepseek_summary=summary,
-                deepseek_recommendation=recommendation
+                analysis_data=analysis_data,
+                response_text=response_text,
+                deepseek_recommendation=recommendation,
+                deepseek_summary=analysis_data.get("summary", "")
             )
             
             # Update email metadata with processing results
             email["analysis_results"] = {
                 "is_meeting": is_meeting,
-                "deepseek_summary": summary,
+                "analysis_data": analysis_data,
+                "response_text": response_text,
                 "deepseek_recommendation": recommendation,
                 "final_category": category,
                 "processed_at": datetime.now().isoformat(),

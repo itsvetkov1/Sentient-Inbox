@@ -36,14 +36,12 @@ class MockLlamaAnalyzer:
     def __init__(self):
         self.analyzed_emails = []
 
-    async def analyze_email(self, message_id: str, subject: str, content: str, sender: str, email_type: EmailTopic):
+    async def classify_email(self, message_id: str, subject: str, content: str, sender: str):
         self.analyzed_emails.append(content)
-        if "meeting" in content.lower():
-            return "needs_review", {"explanation": "This is a meeting email"}
-        elif "urgent" in content.lower():
-            return "needs_review", {"explanation": "This email requires immediate attention"}
+        if "meeting" in content.lower() or "urgent" in content.lower():
+            return True, None  # Is a meeting email, no error
         else:
-            return "needs_standard_response", {"explanation": "This email can be handled with a standard response"}
+            return False, None  # Not a meeting email, no error
 
 class MockDeepseekAnalyzer:
     """Mock DeepseekAnalyzer for testing."""
@@ -53,11 +51,55 @@ class MockDeepseekAnalyzer:
     async def analyze_email(self, email_content: str):
         self.analyzed_emails.append(email_content)
         if "meeting" in email_content.lower():
-            return "standard_response", {"explanation": "This is a meeting email"}
+            analysis_data = {
+                "summary": "This is a meeting email",
+                "completeness": "4/4",
+                "missing_elements": "None"
+            }
+            response_text = "Thank you for your meeting request. I am pleased to confirm our meeting."
+            recommendation = "standard_response"
+            error = None
         elif "urgent" in email_content.lower():
-            return "flag_for_action", {"explanation": "This email requires immediate attention"}
+            analysis_data = {
+                "summary": "This email requires immediate attention",
+                "completeness": "2/4",
+                "missing_elements": "Time, Location"
+            }
+            response_text = "Thank you for your urgent message. Our team will review it promptly."
+            recommendation = "needs_review"
+            error = None
         else:
-            return "ignore", {"explanation": "This email can be ignored"}
+            analysis_data = {
+                "summary": "This email can be ignored",
+                "completeness": "1/4",
+                "missing_elements": "Time, Location, Agenda"
+            }
+            response_text = "Thank you for your information."
+            recommendation = "ignore"
+            error = None
+        return analysis_data, response_text, recommendation, error
+
+class MockResponseCategorizer:
+    """Mock ResponseCategorizer for testing."""
+    def __init__(self):
+        self.categorized_emails = []
+
+    async def categorize_email(
+        self,
+        analysis_data,
+        response_text,
+        deepseek_recommendation,
+        deepseek_summary=None
+    ):
+        self.categorized_emails.append((analysis_data, response_text, deepseek_recommendation))
+        
+        # Return based on recommendation
+        if deepseek_recommendation == "standard_response":
+            return "standard_response", response_text
+        elif deepseek_recommendation == "needs_review":
+            return "needs_review", None
+        else:  # ignore
+            return "ignore", None
 
 class TestEmailProcessor(unittest.TestCase):
     def setUp(self):
@@ -93,9 +135,16 @@ class TestEmailProcessor(unittest.TestCase):
         # Initialize mocks
         self.llama_analyzer = MockLlamaAnalyzer()
         self.deepseek_analyzer = MockDeepseekAnalyzer()
+        self.response_categorizer = MockResponseCategorizer()
         
         # Initialize processor
-        self.processor = EmailProcessor(self.gmail_client, self.llama_analyzer, self.deepseek_analyzer, "test_secure")
+        self.processor = EmailProcessor(
+            gmail_client=self.gmail_client,
+            llama_analyzer=self.llama_analyzer,
+            deepseek_analyzer=self.deepseek_analyzer,
+            response_categorizer=self.response_categorizer,
+            storage_path="test_secure"
+        )
         
     def tearDown(self):
         # Clean up any test files
@@ -110,7 +159,7 @@ class TestEmailProcessor(unittest.TestCase):
         # Mock the classify_email method to return MEETING for all emails
         mock_classify_email.return_value = EmailTopic.MEETING
 
-        processed_count, error_count, errors = await self.processor.process_unread_emails()
+        processed_count, error_count, errors = await self.processor.process_email_batch()
         
         # Verify counts
         self.assertEqual(processed_count, 3)  # All emails should be processed
@@ -142,11 +191,11 @@ class TestEmailProcessor(unittest.TestCase):
         mock_classify_email.return_value = EmailTopic.MEETING
 
         # Process emails first time
-        await self.processor.process_unread_emails()
+        await self.processor.process_email_batch()
         initial_processed = len(self.meeting_agent.processed_emails)
         
         # Process same emails again
-        processed_count, error_count, errors = await self.processor.process_unread_emails()
+        processed_count, error_count, errors = await self.processor.process_email_batch()
         
         # Verify no duplicate processing
         self.assertEqual(len(self.meeting_agent.processed_emails), initial_processed)
@@ -158,7 +207,7 @@ class TestEmailProcessor(unittest.TestCase):
         duplicate_email["message_id"] = "different_id"  # Different ID but same content
         self.gmail_client.unread_emails = [duplicate_email]
         
-        processed_count, error_count, errors = self.processor.process_unread_emails()
+        processed_count, error_count, errors = await self.processor.process_email_batch()
         
         # Should detect as duplicate despite different ID
         self.assertEqual(len(self.meeting_agent.processed_emails), initial_processed)
@@ -174,8 +223,14 @@ class TestEmailProcessor(unittest.TestCase):
         failing_gmail = MockGmailClient()
         failing_gmail.get_unread_emails = Mock(side_effect=Exception("API Error"))
         
-        processor = EmailProcessor(failing_gmail, self.llama_analyzer, self.deepseek_analyzer, "test_secure")
-        processed_count, error_count, errors = await processor.process_unread_emails()
+        processor = EmailProcessor(
+            gmail_client=failing_gmail, 
+            llama_analyzer=self.llama_analyzer, 
+            deepseek_analyzer=self.deepseek_analyzer, 
+            response_categorizer=self.response_categorizer,
+            storage_path="test_secure"
+        )
+        processed_count, error_count, errors = await processor.process_email_batch()
         
         self.assertEqual(processed_count, 0)
         self.assertEqual(error_count, 1)
@@ -187,7 +242,7 @@ class TestEmailProcessor(unittest.TestCase):
         failing_agent.process_email = Mock(side_effect=Exception("Agent Error"))
         
         self.processor.register_agent(EmailTopic.MEETING, failing_agent)
-        processed_count, error_count, errors = self.processor.process_unread_emails()
+        processed_count, error_count, errors = await self.processor.process_email_batch()
         
         self.assertTrue(error_count > 0)
         self.assertTrue(any("Agent Error" in error for error in errors))
@@ -199,7 +254,7 @@ class TestEmailProcessor(unittest.TestCase):
         mock_classify_email.return_value = EmailTopic.MEETING
 
         # Process emails
-        await self.processor.process_unread_emails()
+        await self.processor.process_email_batch()
         
         # Verify storage
         storage = SecureStorageManager("test_secure")
