@@ -375,6 +375,7 @@ class DeepseekAnalyzer:
         
         # Construct the formatted analysis output - fixed proper indentation
         mock_content = f"""
+Think step by step, but only keep a minimum draft for each thinking step, with 5 words at most. Return the answer at the end of the response after a separator ####
 █ ANALYSIS █
 Completeness: {completeness}/4 elements
 Missing Elements: {", ".join(missing_elements) if missing_elements else "None"}

@@ -7,6 +7,10 @@ protobuf>=4.0.0                # Protocol buffers support
 groq>=0.3.0                    # Groq AI integration
 cryptography>=41.0.0           # Secure storage encryption
 
+# Authentication Dependencies
+passlib>=1.7.4                 # Password hashing
+bcrypt>=4.0.1                  # Secure password hashing backend for passlib
+
 # Content Processing
 beautifulsoup4>=4.12.0         # HTML content processing
 lxml>=4.9.0                    # XML/HTML parser
