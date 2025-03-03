@@ -9,6 +9,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from api.routes import auth, emails, dashboard
+
 
 sys.path.append(str(Path(__file__).parent / "src"))
 
@@ -37,6 +39,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth.router)
+app.include_router(emails.router)
+app.include_router(dashboard.router)
 
 # API Models
 class ProcessEmailRequest(BaseModel):
@@ -182,6 +188,18 @@ processor = EmailProcessor(
 processor.register_agent(EmailTopic.MEETING, meeting_agent)
 
 # API Routes
+@app.on_event("startup")
+async def startup_event():
+    """Perform initialization tasks on application startup."""
+    logger.info("API service starting up")
+    
+    # Log all registered routes
+    routes = []
+    for route in app.routes:
+        if hasattr(route, "path"):
+            routes.append(f"{route.path}")
+    logger.info(f"Registered routes: {routes}")
+
 @app.post("/api/process-emails", response_model=ProcessEmailResponse)
 async def process_emails(request: ProcessEmailRequest) -> Dict[str, Any]:
     """Process a batch of emails"""

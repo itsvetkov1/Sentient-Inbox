@@ -1,24 +1,23 @@
-from .classification.classifier import EmailClassifier, EmailRouter, EmailTopic, EmailMetadata
+"""
+Email processing package initialization.
+"""
+
+from .models import EmailMetadata, EmailTopic
+from .classification.classifier import EmailClassifier, EmailRouter
 from .handlers.writer import EmailAgent
 from .analyzers.llama import LlamaAnalyzer
 from .analyzers.deepseek import DeepseekAnalyzer
-from .handlers.content import ContentPreprocessor
-from .handlers.date_service import EmailDateService
-
-from .processor import EmailProcessor
 from .analyzers.response_categorizer import ResponseCategorizer
-
+from .processor import EmailProcessor
 
 __all__ = [
-    'EmailProcessor',
+    'EmailMetadata',
+    'EmailTopic',
     'EmailClassifier',
     'EmailRouter',
-    'EmailTopic',
-    'EmailMetadata',
     'EmailAgent',
     'LlamaAnalyzer',
     'DeepseekAnalyzer',
-    'ContentPreprocessor',
-    'EmailDateService',
     'ResponseCategorizer',
+    'EmailProcessor'
 ]

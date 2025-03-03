@@ -21,8 +21,8 @@ from typing import Dict, Tuple, List, Optional, Any
 from datetime import datetime
 import json
 
-from integrations.groq import EnhancedGroqClient
-from config.analyzer_config import ANALYZER_CONFIG
+from src.integrations.groq.client_wrapper import EnhancedGroqClient
+from src.config.analyzer_config import ANALYZER_CONFIG
 
 logger = logging.getLogger(__name__)
 

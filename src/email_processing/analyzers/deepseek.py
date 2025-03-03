@@ -24,7 +24,7 @@ import re
 from typing import Dict, Tuple, Optional, Any, List
 from datetime import datetime
 import aiohttp
-from config.analyzer_config import ANALYZER_CONFIG
+from src.config.analyzer_config import ANALYZER_CONFIG
 
 # Configure logger with proper naming
 logger = logging.getLogger(__name__)

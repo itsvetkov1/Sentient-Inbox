@@ -34,17 +34,14 @@ from api.models.emails import (
     MeetingDetails
 )
 
-# Add core system directories to Python path for imports
-# This ensures we can import from the src package when running the API
-current_dir = Path(__file__).parent.parent.parent.parent  # Navigate up to project root
-sys.path.append(str(current_dir))
-
 # Import core system components
 from src.storage.secure import SecureStorage
-from src.email_processing.analyzers.llama import LlamaAnalyzer
-from src.email_processing.analyzers.deepseek import DeepseekAnalyzer
-from src.email_processing.analyzers.response_categorizer import ResponseCategorizer
-from src.email_processing.processor import EmailProcessor
+from src.email_processing import (
+    EmailProcessor,
+    LlamaAnalyzer,
+    DeepseekAnalyzer,
+    ResponseCategorizer
+)
 from src.integrations.gmail.client import GmailClient
 
 # Configure logging
@@ -755,4 +752,4 @@ email_service = EmailService()
 
 def get_email_service() -> EmailService:
     """Provide email service instance for dependency injection."""
-    return email_service  
+    return email_service

@@ -10,8 +10,9 @@ from typing import Dict, List, Optional, Tuple
 from dotenv import load_dotenv
 from openai import OpenAI
 
-from email_processing import EmailMetadata
-from integrations import GmailClient, EnhancedGroqClient
+from src.email_processing.models import EmailMetadata
+from src.integrations.gmail.client import GmailClient
+from src.integrations.groq.client_wrapper import EnhancedGroqClient
 
 logger = logging.getLogger(__name__)
 load_dotenv(override=True)

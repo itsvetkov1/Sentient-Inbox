@@ -12,15 +12,16 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from .classification.classifier import EmailMetadata, EmailRouter, EmailTopic
-from .handlers.content import ContentPreprocessor
-from .handlers.date_service import EmailDateService
-from .analyzers.llama import LlamaAnalyzer
-from .analyzers.deepseek import DeepseekAnalyzer
-from .analyzers.response_categorizer import ResponseCategorizer
-from integrations import GmailClient
-from storage import SecureStorage
-from .handlers.writer import EmailAgent
+from src.email_processing.models import EmailMetadata, EmailTopic
+from src.email_processing.classification.classifier import EmailRouter
+from src.email_processing.handlers.content import ContentPreprocessor
+from src.email_processing.handlers.date_service import EmailDateService
+from src.email_processing.analyzers.llama import LlamaAnalyzer
+from src.email_processing.analyzers.deepseek import DeepseekAnalyzer
+from src.email_processing.analyzers.response_categorizer import ResponseCategorizer
+from src.integrations.gmail.client import GmailClient
+from src.storage.secure import SecureStorage
+from src.email_processing.handlers.writer import EmailAgent
 
 logger = logging.getLogger(__name__)
 

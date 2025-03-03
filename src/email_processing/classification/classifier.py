@@ -2,34 +2,14 @@ import asyncio
 import json
 import logging
 import time
-from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
-from integrations import EnhancedGroqClient, ModelManager
+from src.integrations.groq.client_wrapper import EnhancedGroqClient
+from src.integrations.groq.model_manager import ModelManager
+from src.email_processing.models import EmailMetadata, EmailTopic
 
 logger = logging.getLogger(__name__)
-
-class EmailTopic(Enum):
-    """Supported email topics for classification."""
-    MEETING = "meeting"
-    UNKNOWN = "unknown"
-    # Add new topics here as more agents are introduced
-    # Example: TASK = "task"
-    # Example: REPORT = "report"
-
-@dataclass
-class EmailMetadata:
-    """Metadata about a processed email."""
-    message_id: str
-    subject: str
-    sender: str
-    received_at: datetime
-    topic: EmailTopic
-    requires_response: bool
-    raw_content: str
-    analysis_data: Optional[Dict] = None
 
 class EmailClassifier:
     """

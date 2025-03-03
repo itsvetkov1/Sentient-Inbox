@@ -18,8 +18,8 @@ from typing import Tuple, Dict, Optional, Any
 from datetime import datetime
 import traceback
 
-from integrations import EnhancedGroqClient
-from config.analyzer_config import ANALYZER_CONFIG
+from src.integrations.groq.client_wrapper import EnhancedGroqClient
+from src.config.analyzer_config import ANALYZER_CONFIG
 
 # Configure logger with proper naming
 logger = logging.getLogger(__name__)

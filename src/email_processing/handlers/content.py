@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import email.utils
 from zoneinfo import ZoneInfo
-from email_processing.base import BaseEmailAnalyzer as BaseProcessor
+from src.email_processing.base import BaseEmailAnalyzer as BaseProcessor
 
 logger = logging.getLogger(__name__)
 
