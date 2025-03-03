@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import DashboardLayout from '../components/dashboard/DashboardLayout';
 import StatsCard from '../components/dashboard/StatsCard';
 import EmailList from '../components/dashboard/EmailList';
+import { dashboardService, emailService } from '../services/api';
 
 // MUI Icons
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -68,24 +69,36 @@ const DashboardPage = () => {
   const [activeFilter, setActiveFilter] = useState('all');
 
   useEffect(() => {
-    // Simulate API fetch with a delay
+    // Fetch data from the API
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // In a real app, you would fetch from API
-        // const emailsResponse = await emailService.getEmails();
-        // const statsResponse = await emailService.getStats();
+        // Fetch dashboard stats and email data simultaneously
+        const [statsResponse, emailsResponse] = await Promise.all([
+          dashboardService.getStats(),
+          emailService.getEmails(10)
+        ]);
         
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        setEmails(emailsResponse.emails || []);
         
-        setEmails(mockEmails);
-        setStats(mockStats);
+        // Extract relevant stats from the dashboard stats response
+        const dashStats = {
+          total_emails: statsResponse.total_emails,
+          meeting_emails: statsResponse.meeting_emails,
+          success_rate: statsResponse.success_rate,
+          avg_process_time: statsResponse.avg_processing_time
+        };
+        
+        setStats(dashStats);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
         setError('Failed to load dashboard data. Please try again.');
+        
+        // Fall back to mock data in case of error
+        setEmails(mockEmails);
+        setStats(mockStats);
         setLoading(false);
       }
     };
@@ -97,15 +110,23 @@ const DashboardPage = () => {
     try {
       setLoading(true);
       
-      // In a real app, you would fetch updated data
-      // const emailsResponse = await emailService.getEmails();
-      // const statsResponse = await emailService.getStats();
+      // Fetch updated data from the API
+      const [statsResponse, emailsResponse] = await Promise.all([
+        dashboardService.getStats(),
+        emailService.getEmails(10)
+      ]);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      setEmails(emailsResponse.emails || []);
       
-      setEmails(mockEmails);
-      setStats(mockStats);
+      // Extract relevant stats from the dashboard stats response
+      const dashStats = {
+        total_emails: statsResponse.total_emails,
+        meeting_emails: statsResponse.meeting_emails,
+        success_rate: statsResponse.success_rate,
+        avg_process_time: statsResponse.avg_processing_time
+      };
+      
+      setStats(dashStats);
       setLoading(false);
     } catch (err) {
       console.error('Error refreshing dashboard data:', err);
@@ -114,15 +135,26 @@ const DashboardPage = () => {
     }
   };
   
-  const handleFilterChange = (filter) => {
+  const handleFilterChange = async (filter) => {
     setActiveFilter(filter);
+    setLoading(true);
     
-    // In a real app, you would fetch filtered data from API
-    // For now, we'll just filter the mock data
-    if (filter === 'all') {
-      setEmails(mockEmails);
-    } else {
-      setEmails(mockEmails.filter(email => email.category === filter));
+    try {
+      // Fetch filtered emails from the API
+      const response = await emailService.getEmails(10, 0, filter === 'all' ? null : filter);
+      setEmails(response.emails || []);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching filtered emails:', err);
+      setError('Failed to load filtered emails. Please try again.');
+      
+      // Fall back to filtering the existing emails
+      if (filter === 'all') {
+        setEmails(mockEmails);
+      } else {
+        setEmails(mockEmails.filter(email => email.category === filter));
+      }
+      setLoading(false);
     }
   };
   

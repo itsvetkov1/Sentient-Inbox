@@ -12,5 +12,6 @@ Design Considerations:
 
 from api.routes import auth
 from api.routes import emails
+from api.routes import dashboard
 
-__all__ = ["auth", "emails"]
+__all__ = ["auth", "emails", "dashboard"]

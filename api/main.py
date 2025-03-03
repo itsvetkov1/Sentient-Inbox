@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.config import get_settings, EnvironmentType
 from api.middleware.rate_limiter import RateLimiter
 from api.utils.error_handlers import add_exception_handlers
-from api.routes import auth, emails
+from api.routes import auth, emails, dashboard
 
 # Configure logging
 logging.basicConfig(
@@ -69,6 +69,7 @@ def create_application() -> FastAPI:
     # Include routers
     app.include_router(auth.router)
     app.include_router(emails.router)
+    app.include_router(dashboard.router)
     
     # Add startup and shutdown events
     @app.on_event("startup")

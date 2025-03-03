@@ -128,7 +128,51 @@ export const emailService = {
   }
 };
 
+// Dashboard services
+export const dashboardService = {
+  getStats: async (period = 'day') => {
+    try {
+      const response = await apiClient.get('/dashboard/stats', { 
+        params: { period } 
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getUserActivity: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/user-activity');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getEmailAccountStats: async () => {
+    try {
+      const response = await apiClient.get('/dashboard/email-accounts');
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  getDashboardSummary: async (period = 'day') => {
+    try {
+      const response = await apiClient.get('/dashboard/summary', {
+        params: { period }
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
+
 export default {
   auth: authService,
-  emails: emailService
+  emails: emailService,
+  dashboard: dashboardService
 };
