@@ -1,13 +1,3 @@
 {
-  "responses": [
-    {
-      "email_id": "195440f0694925db",
-      "response_time": "2025-02-26T23:00:47.188238",
-      "response_data": {
-        "sender": "Ivailo Tsvetkov <i.b.cvetkov@gmail.com>",
-        "subject": "",
-        "response": "Hey there! Could you share the **virtual meeting link or location** and the **list of attendees**? This will help us prepare better \ud83d\ude0a"
-      }
-    }
-  ]
+  "responses": []
 }

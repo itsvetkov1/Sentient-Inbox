@@ -1,9 +1,17 @@
 # Email Management System
 
 ## Project Overview
-An advanced automated email management system focused on meeting coordination through Gmail integration. The system employs a sophisticated AI-powered architecture using Groq, with specialized components designed for efficient email processing and response handling. The foundation includes secure storage encryption and Gmail integration with OAuth2 authentication.
+An advanced automated email management system with RESTful API endpoints for meeting coordination through Gmail integration. The system employs a sophisticated AI-powered architecture using FastAPI and Groq, with specialized components designed for efficient email processing and response handling. The foundation includes secure storage encryption, API integration capabilities, and Gmail integration with OAuth2 authentication.
 
 ## Core Architecture
+
+### API Layer
+1. FastAPI Framework
+   - RESTful endpoint definitions
+   - Async request handling
+   - Pydantic model validation
+   - CORS middleware
+   - Health monitoring
 
 ### Content Processing System
 1. HTML Content Processing
@@ -39,6 +47,7 @@ An advanced automated email management system focused on meeting coordination th
       - Final categorization
 
 ### Processing Rules
+- API request validation
 - Content preprocessing before analysis
 - Pattern preservation during processing
 - Required meeting details validation
@@ -48,6 +57,8 @@ An advanced automated email management system focused on meeting coordination th
 - Error handling with retries
 
 ## Technical Requirements
+- FastAPI for REST API framework
+- Uvicorn for ASGI server
 - BeautifulSoup for HTML processing
 - RFC 2822 and ISO 8601 date handling
 - Groq API integration for AI processing
@@ -59,15 +70,20 @@ An advanced automated email management system focused on meeting coordination th
 - Error handling and recovery
 
 ## Project Goals
-1. Implement advanced content preprocessing
-2. Develop robust date handling system
-3. Optimize token management
-4. Enhance pattern preservation
-5. Implement core analysis pipeline
-6. Create comprehensive logging
-7. Design microservice components
+1. Implement RESTful API endpoints
+2. Develop request/response validation
+3. Implement advanced content preprocessing
+4. Develop robust date handling system
+5. Optimize token management
+6. Enhance pattern preservation
+7. Implement core analysis pipeline
+8. Create comprehensive logging
+9. Design microservice components
 
 ## Current Status
+- FastAPI integration complete
+- API endpoints implemented
+- Request/response validation active
 - Advanced content preprocessing implemented
 - Robust date handling system in place
 - Token management system operational
@@ -76,13 +92,19 @@ An advanced automated email management system focused on meeting coordination th
 - Comprehensive logging active
 
 ## Next Steps (High Priority)
-1. Optimize content chunking
-2. Enhance date pattern recognition
-3. Improve token estimation
-4. Refine pattern preservation
-5. Develop monitoring system
+1. Implement API authentication
+2. Add rate limiting
+3. Enhance error responses
+4. Optimize content chunking
+5. Enhance date pattern recognition
+6. Improve token estimation
+7. Refine pattern preservation
+8. Develop monitoring system
 
 ## Future Enhancements
+- API versioning system
+- Enhanced authentication methods
+- Advanced rate limiting strategies
 - Enhanced date parsing capabilities
 - Advanced pattern recognition
 - Improved token optimization
