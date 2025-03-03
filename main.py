@@ -3,7 +3,11 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Dict, Any
 
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from dotenv import load_dotenv
 
 sys.path.append(str(Path(__file__).parent / "src"))
@@ -17,6 +21,37 @@ from src.email_processing import (
 
 from src.integrations.gmail.client import GmailClient
 from src.storage.secure import SecureStorage
+
+# Initialize FastAPI app
+app = FastAPI(
+    title="Sentient Inbox API",
+    description="API for intelligent email processing and management",
+    version="1.0.0"
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Update with specific origins in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# API Models
+class ProcessEmailRequest(BaseModel):
+    batch_size: int = 100
+
+class ProcessEmailResponse(BaseModel):
+    processed_count: int
+    error_count: int
+    success: bool
+    errors: list[str] = []
+
+class MaintenanceResponse(BaseModel):
+    key_rotated: bool
+    records_cleaned: bool
+    success: bool
 
 def setup_logging():
     """
@@ -131,6 +166,58 @@ async def perform_maintenance():
     except Exception as e:
         logger.error(f"Error during maintenance tasks: {str(e)}", exc_info=True)
 
+# Initialize components
+gmail_client = GmailClient()
+llama_analyzer = LlamaAnalyzer()
+deepseek_analyzer = DeepseekAnalyzer()
+response_categorizer = ResponseCategorizer()
+secure_storage = SecureStorage()
+meeting_agent = EmailAgent()
+processor = EmailProcessor(
+    gmail_client=gmail_client,
+    llama_analyzer=llama_analyzer,
+    deepseek_analyzer=deepseek_analyzer,
+    response_categorizer=response_categorizer
+)
+processor.register_agent(EmailTopic.MEETING, meeting_agent)
+
+# API Routes
+@app.post("/api/process-emails", response_model=ProcessEmailResponse)
+async def process_emails(request: ProcessEmailRequest) -> Dict[str, Any]:
+    """Process a batch of emails"""
+    try:
+        processed_count, error_count, errors = await processor.process_email_batch(request.batch_size)
+        return {
+            "processed_count": processed_count,
+            "error_count": error_count,
+            "success": error_count == 0,
+            "errors": errors
+        }
+    except Exception as e:
+        logger.error(f"API Error processing emails: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/maintenance", response_model=MaintenanceResponse)
+async def run_maintenance() -> Dict[str, Any]:
+    """Run maintenance tasks"""
+    try:
+        key_rotated = await secure_storage.rotate_key()
+        records_cleaned = await secure_storage._cleanup_old_records()
+        return {
+            "key_rotated": key_rotated,
+            "records_cleaned": records_cleaned,
+            "success": True
+        }
+    except Exception as e:
+        logger.error(f"API Error during maintenance: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/health")
+async def health_check() -> Dict[str, str]:
+    """Check API health"""
+    return {"status": "healthy"}
+
+# Script entry point
 if __name__ == "__main__":
     log_execution("Starting email processing...")
     asyncio.run(main())

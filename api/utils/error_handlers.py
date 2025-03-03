@@ -11,6 +11,7 @@ Design Considerations:
 - Detailed error logging
 """
 
+import json
 import logging
 import traceback
 from datetime import datetime
@@ -18,8 +19,8 @@ from typing import Dict, Any, Union, List
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import JSONResponse as StarletteJSONResponse
 from pydantic import ValidationError
 
 from api.models.errors import ErrorResponse, ValidationErrorResponse, ValidationErrorItem
@@ -27,6 +28,23 @@ from api.models.errors import ErrorResponse, ValidationErrorResponse, Validation
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Custom JSON Encoder to handle datetime serialization
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects."""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
+def serialize_json(obj):
+    """Serialize object to JSON string with datetime support."""
+    return json.dumps(obj, cls=DateTimeEncoder)
+
+# Custom JSONResponse that automatically handles datetime serialization
+class JSONResponse(StarletteJSONResponse):
+    """Custom JSONResponse that handles datetime serialization."""
+    def render(self, content):
+        return serialize_json(content).encode("utf-8")
 
 def add_exception_handlers(app: FastAPI) -> None:
     """

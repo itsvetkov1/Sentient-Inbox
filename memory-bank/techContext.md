@@ -4,13 +4,18 @@
 
 ### Core Technologies
 - Python 3.x (with asyncio)
+- FastAPI (REST API framework)
 - Gmail API
 - Groq API (for Llama model integration)
 - Deepseek API (for Deepseek R1 model integration)
 - BeautifulSoup4 for HTML processing
 - JSON for structured data storage and communication
+- Uvicorn (ASGI server)
 
 ### Key Dependencies
+- fastapi: REST API framework
+- uvicorn: ASGI server implementation
+- pydantic: Data validation and API models
 - groq-sdk: Groq API integration for Llama model
 - deepseek-sdk: Deepseek API integration for Deepseek R1 model
 - google-api-python-client: Gmail API access
@@ -19,9 +24,26 @@
 - typing-extensions: Type hints support
 - pathlib: Path manipulation
 - logging: Comprehensive DEBUG level logging
-- pydantic: Data validation and settings management
 - zoneinfo: Timezone handling for dates
 - email: RFC 2822 email parsing
+
+## API Endpoints
+
+### Email Processing
+- POST /api/process-emails
+  - Process a batch of emails
+  - Parameters: batch_size (default: 100)
+  - Returns: ProcessEmailResponse
+
+### System Maintenance
+- POST /api/maintenance
+  - Run maintenance tasks
+  - Returns: MaintenanceResponse
+
+### Health Check
+- GET /api/health
+  - Check API health status
+  - Returns: Health status object
 
 ## Development Setup
 
@@ -69,6 +91,7 @@ sentient-inbox/
 - HTML parsing complexity
 
 ### Performance Requirements
+- FastAPI async request handling
 - Efficient HTML content cleaning
 - Accurate date pattern recognition
 - Smart content chunking and preservation
@@ -79,6 +102,7 @@ sentient-inbox/
 - Reliable error recovery with single retry and 3-second delay
 
 ### Security Requirements
+- CORS configuration for API endpoints
 - OAuth2 authentication for Gmail integration
 - Secure API key storage for Groq and Deepseek
 - HTML content sanitization
@@ -115,6 +139,7 @@ sentient-inbox/
 - HTML cleaning recovery
 
 ### Testing Requirements
+- API endpoint testing
 - Unit tests for content processing
 - Date parsing validation tests
 - Pattern preservation verification
@@ -127,6 +152,8 @@ sentient-inbox/
 ## Monitoring & Metrics
 
 ### Performance Tracking
+- API endpoint response times
+- Request success rates
 - HTML cleaning efficiency
 - Date extraction accuracy
 - Pattern preservation success
